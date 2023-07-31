@@ -18,8 +18,8 @@ public class HeavenRushModule : EverestModule {
         // debug builds use verbose logging
         Logger.SetLogLevel(nameof(HeavenRushModule), LogLevel.Verbose);
 #else
-            // release builds use info logging to reduce spam in log files
-            Logger.SetLogLevel(nameof(HeavenRushModule), LogLevel.Info);
+        // release builds use info logging to reduce spam in log files
+        Logger.SetLogLevel(nameof(HeavenRushModule), LogLevel.Info);
 #endif
     }
 

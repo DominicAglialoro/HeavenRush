@@ -1,6 +1,6 @@
-- Name: celeste.HeavenRush
+- Name: HeavenRush
   Version: 0.1.0
-  DLL: bin/celeste.HeavenRush.dll
+  DLL: Code/bin/HeavenRush.dll
   Dependencies:
     - Name: Everest
-      Version: 1.3471.0
+      Version: 1.0.0
