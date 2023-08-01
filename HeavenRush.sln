@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeavenRush", "HeavenRush.csproj", "{21685DE6-AD45-492C-8824-1E1E222C706F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeavenRush", "src\HeavenRush.csproj", "{21685DE6-AD45-492C-8824-1E1E222C706F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,7 +10,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{21685DE6-AD45-492C-8824-1E1E222C706F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{21685DE6-AD45-492C-8824-1E1E222C706F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21685DE6-AD45-492C-8824-1E1E222C706F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{21685DE6-AD45-492C-8824-1E1E222C706F}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{21685DE6-AD45-492C-8824-1E1E222C706F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21685DE6-AD45-492C-8824-1E1E222C706F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
