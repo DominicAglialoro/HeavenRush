@@ -1,6 +1,6 @@
 - Name: HeavenRush
   Version: 0.1.0
-  DLL: Code/HeavenRush.dll
+  DLL: src/bin/Release/HeavenRush.dll
   Dependencies:
     - Name: Everest
       Version: 1.0.0

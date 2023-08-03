@@ -64,10 +64,6 @@
       <Folder Include="Properties" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Target Name="PostBuild" AfterTargets="Build">
-        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="..\HeavenRush\Code" />
-        <!--        <Exec Command="XCOPY &quot;$(MSBuildProjectDirectory)\HeavenRush&quot; &quot;$(CelestePrefix)\Mods\HeavenRush&quot; /S /I" />-->
-    </Target>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
     <Target Name="BeforeBuild">
