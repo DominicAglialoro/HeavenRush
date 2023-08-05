@@ -1,75 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{21685DE6-AD45-492C-8824-1E1E222C706F}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>HeavenRush</RootNamespace>
         <AssemblyName>HeavenRush</AssemblyName>
-        <FileAlignment>512</FileAlignment>
         <LangVersion>latest</LangVersion>
-        <CelestePath>C:\Users\domia\Celeste Copy</CelestePath>
-        <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>x86</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>x86</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
+        <CelesteLibsPath>$(HOMEPATH)\Celeste Libs</CelesteLibsPath>
+        <TargetFramework>net452</TargetFramework>
+        <OutputPath>bin</OutputPath>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="Celeste">
-            <HintPath>$(CelestePath)\Celeste.exe</HintPath>
+            <HintPath>$(CelesteLibsPath)\Celeste.exe</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="ExtendedVariantMode">
+            <HintPath>$(CelesteLibsPath)\ExtendedVariantMode.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="FNA">
-            <HintPath>$(CelestePath)\FNA.dll</HintPath>
+            <HintPath>$(CelesteLibsPath)\FNA.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="MMHOOK_Celeste">
-            <HintPath>$(CelestePath)\MMHOOK_Celeste.dll</HintPath>
+            <HintPath>$(CelesteLibsPath)\MMHOOK_Celeste.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="MonoMod.RuntimeDetour, Version=22.7.31.1, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\MonoMod.RuntimeDetour.22.7.31.1\lib\net452\MonoMod.RuntimeDetour.dll</HintPath>
+        </Reference>
+        <Reference Include="MonoMod.Utils, Version=22.7.31.1, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\MonoMod.Utils.22.7.31.1\lib\net452\MonoMod.Utils.dll</HintPath>
+        </Reference>
+        <Reference Include="YamlDotNet">
+            <HintPath>$(CelesteLibsPath)\YamlDotNet.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Data" />
         <Reference Include="System.Xml" />
-        <Reference Include="YamlDotNet">
-            <HintPath>$(CelestePath)\YamlDotNet.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="HeavenRushModule.cs" />
-        <Compile Include="HeavenRushModuleSession.cs" />
-        <Compile Include="HeavenRushModuleSettings.cs" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Properties" />
     </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
-    </Target>
-    <Target Name="AfterBuild">
-    </Target>
-    -->
-
+    <ItemGroup>
+      <None Include="packages.config" />
+    </ItemGroup>
 </Project>
