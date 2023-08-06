@@ -23,10 +23,14 @@ public class HeavenRushModule : EverestModule {
     }
 
     public override void Load() {
-        // TODO: apply any hooks that should always be active
+        PlayerExtensions.Load();
+    }
+
+    public override void Initialize() {
+        PlayerExtensions.Initialize();
     }
 
     public override void Unload() {
-        // TODO: unapply any hooks applied in Load()
+        PlayerExtensions.Unload();
     }
 }

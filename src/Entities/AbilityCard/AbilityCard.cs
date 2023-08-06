@@ -4,21 +4,23 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush;
 
-[CustomEntity("AbilityCard")]
+[CustomEntity("HeavenRush/AbilityCard")]
 public class AbilityCard : Entity {
-    private AbilityCardType type;
-    private Sprite sprite;
-    private Image outline;
+    private AbilityCardType cardType;
+    private Image image;
 
     public AbilityCard(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        type = (AbilityCardType) data.Int("type", 0);
+        cardType = (AbilityCardType) data.Int("cardType", 0);
         Collider = new Hitbox(16f, 16f, -8f, -8f);
-        Add(sprite = new Sprite(GFX.Game, data.Attr("texture")));
-        Add(outline = new Image(GFX.Game[data.Attr("outline")]));
+        Add(image = new Image(GFX.Game[$"AbilityCard/Card{cardType}"]));
         Add(new PlayerCollider(OnPlayer));
+        image.CenterOrigin();
     }
 
     private void OnPlayer(Player player) {
+        if (!player.ExtData().CardInventory.TryAddCard(cardType))
+            return;
+        
         Audio.Play("event:/game/general/diamond_touch", Position);
         Celeste.Freeze(0.05f);
         RemoveSelf();
