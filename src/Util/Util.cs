@@ -12,4 +12,10 @@ public static class Util {
         BindingFlags.Static |
         BindingFlags.Public |
         BindingFlags.NonPublic);
+    
+    public static PropertyInfo GetPropertyUnconstrained(this Type type, string name) => type.GetProperty(name,
+        BindingFlags.Instance |
+        BindingFlags.Static |
+        BindingFlags.Public |
+        BindingFlags.NonPublic);
 }
