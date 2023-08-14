@@ -11,7 +11,7 @@ using MonoMod.Utils;
 namespace Celeste.Mod.HeavenRush;
 
 public static class PlayerExtensions {
-    private const float GROUND_BOOST_FRICTION = 0.65f;
+    private const float GROUND_BOOST_FRICTION = 0.25f;
     private const float GROUND_BOOST_SPEED = 325f;
     private const float GROUND_BOOST_ACCELERATION = 650f;
     private const float GROUND_BOOST_PARTICLE_INTERVAL = 0.004f;
@@ -46,8 +46,11 @@ public static class PlayerExtensions {
     private const float RED_BOOST_TRAIL_DURATION = 0.33f;
     private const float WHITE_CARD_FREEZE = 0.05f;
     private const float WHITE_CARD_REDIRECT_FREEZE = 0.033f;
-    private const float WHITE_DASH_SPEED = 280f;
-    private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
+    private const float WHITE_DASH_SPEED = 325f;
+    private const float WHITE_DASH_REDIRECT_ADD_SPEED = 80f;
+    private const float WHITE_DASH_TRAIL_INTERVAL = 0.016f;
+    private const float WHITE_DASH_TRAIL_DURATION = 0.33f;
+    private static readonly Vector2 WHITE_DASH_STRETCH = new(2f, 0.5f);
 
     private static IDetour il_celeste_Player_orig_Update;
     
@@ -62,6 +65,7 @@ public static class PlayerExtensions {
         On.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
+        On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
     }
 
     public static void Initialize() {
@@ -80,9 +84,13 @@ public static class PlayerExtensions {
         IL.Celeste.Player.ctor -= Player_ctor_il;
         On.Celeste.Player.Update -= Player_Update;
         il_celeste_Player_orig_Update.Dispose();
+        IL.Celeste.Player.OnCollideH -= Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV -= Player_OnCollideV_il;
         On.Celeste.Player.Jump -= Player_Jump;
+        On.Celeste.Player.NormalUpdate -= Player_NormalUpdate;
+        IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin -= Player_DashBegin;
+        On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
     }
 
     public static Data ExtData(this Player player) => Extension<Player, Data>.Of(player);
@@ -94,16 +102,14 @@ public static class PlayerExtensions {
             return;
 
         extData.GroundBoost = groundBoost;
-
-        var variants = ExtendedVariantsModule.Session.OverriddenVariantsInRoom;
         
         if (groundBoost) {
-            variants[ExtendedVariantsModule.Variant.Friction] = GROUND_BOOST_FRICTION;
+            ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.Friction, GROUND_BOOST_FRICTION, false, false, false, false);
             Audio.Play(SFX.char_mad_water_in);
             extData.GroundBoostSoundSource.Play(SFX.env_loc_waterfall_big_main);
         }
         else {
-            variants.Remove(ExtendedVariantsModule.Variant.Friction);
+            ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.Friction, 1f, false, false, false, false);
             extData.GroundBoostSoundSource.Stop();
         }
     }
@@ -164,6 +170,7 @@ public static class PlayerExtensions {
 
     private static int UseBlueCard(this Player player) {
         player.PrepareForCustomDash();
+        player.Sprite.Play("dash");
         Audio.Play("event:/classic/sfx3", player.Position);
         Celeste.Freeze(BLUE_CARD_FREEZE);
 
@@ -176,6 +183,7 @@ public static class PlayerExtensions {
         player.PrepareForCustomDash();
         player.Speed = new Vector2(0f, GREEN_DIVE_FALL_SPEED);
         extData.CustomTrailTimer = GREEN_DIVE_TRAIL_INTERVAL;
+        player.Sprite.Play("fallFast");
         Audio.Play(SFX.game_05_crackedwall_vanish, player.Position);
 
         return (int) CustomState.GreenDive;
@@ -183,6 +191,7 @@ public static class PlayerExtensions {
 
     private static int UseRedCard(this Player player) {
         player.PrepareForCustomDash();
+        player.Sprite.Play("dash");
         Audio.Play("event:/classic/sfx3", player.Position);
         Celeste.Freeze(RED_CARD_FREEZE);
 
@@ -192,8 +201,11 @@ public static class PlayerExtensions {
     private static int UseWhiteCard(this Player player) {
         var extData = player.ExtData();
         
-        Audio.Play(SFX.char_bad_dash_red_right, player.Position);
         player.PrepareForCustomDash();
+        player.Sprite.Scale = Vector2.One;
+        player.Sprite.Play("dreamDashLoop");
+        player.Hair.Visible = false;
+        Audio.Play(SFX.char_bad_dash_red_right, player.Position);
         extData.WhiteDashSoundSource.Play(SFX.char_mad_dreamblock_travel);
         Celeste.Freeze(WHITE_CARD_FREEZE);
 
@@ -243,24 +255,23 @@ public static class PlayerExtensions {
             return;
         
         extData.CustomTrailTimer = interval;
-        TrailManager.Add(player, new Vector2((float) player.Facing * Math.Abs(player.Sprite.Scale.X), player.Sprite.Scale.Y), color, duration);
+        TrailManager.Add(player.Position, player.Sprite, player.Hair.Visible ? player.Hair : null,
+            new Vector2((float) player.Facing * Math.Abs(player.Sprite.Scale.X), player.Sprite.Scale.Y),
+            color, player.Depth + 1, duration);
     }
 
-    private static bool IsCustomDash(this Player player) => player.StateMachine.State is
+    private static bool IsInCustomDash(this Player player) => player.StateMachine.State is
         (int) CustomState.BlueDash or
         (int) CustomState.GreenDive or
         (int) CustomState.RedBoostDash or
         (int) CustomState.WhiteDash;
 
-    private static float GetUltraBoostSpeed(this Player player) {
-        if (player.StateMachine.State != (int) CustomState.RedBoostDash)
-            return player.Speed.X * 1.2f;
-        
-        if (Math.Abs(player.Speed.X) < GROUND_BOOST_SPEED)
-            return player.DashDir.X * GROUND_BOOST_SPEED;
-
-        return player.Speed.X;
-    }
+    private static float GetUltraBoostSpeed(this Player player) => player.StateMachine.State switch {
+        (int) CustomState.RedBoostDash when Math.Abs(player.Speed.X) < GROUND_BOOST_SPEED => player.DashDir.X * GROUND_BOOST_SPEED,
+        (int) CustomState.RedBoostDash => player.Speed.X,
+        (int) CustomState.WhiteDash => player.DashDir.X * player.Speed.Length(),
+        _ => player.Speed.X * 1.2f
+    };
 
     private static void BeforeBaseUpdate(this Player player) {
         var extData = player.ExtData();
@@ -323,6 +334,7 @@ public static class PlayerExtensions {
         
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
         extData.RedBoostTimer = RED_BOOST_DURATION;
+        extData.CustomTrailTimer = RED_BOOST_TRAIL_INTERVAL;
 
         var dashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
         var newSpeed = RED_BOOST_DASH_SPEED * dashDir;
@@ -368,6 +380,18 @@ public static class PlayerExtensions {
         
         player.DashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
 
+        if (player.DashDir.X == 0f) {
+            player.Sprite.Scale = new Vector2(WHITE_DASH_STRETCH.Y, WHITE_DASH_STRETCH.X);
+            player.Sprite.Rotation = 0f;
+        }
+        else {
+            player.Sprite.Scale = WHITE_DASH_STRETCH;
+            player.Sprite.Rotation = (Math.Sign(player.DashDir.X) * player.DashDir).Angle();
+        }
+
+        player.Sprite.Origin.Y = 27f;
+        player.Sprite.Position.Y = -6f;
+        
         float beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").X;
         float dashSpeed = WHITE_DASH_SPEED;
 
@@ -375,29 +399,46 @@ public static class PlayerExtensions {
             dashSpeed = Math.Abs(beforeDashSpeed);
         
         player.Speed = dashSpeed * player.DashDir;
+        extData.CustomTrailTimer = WHITE_DASH_TRAIL_INTERVAL;
 
         while (true) {
-            var cardInventory = extData.CardInventory;
+            player.UpdateTrail(Color.White, WHITE_DASH_TRAIL_INTERVAL, WHITE_DASH_TRAIL_DURATION);
             
-            if (player.ShouldUseCard() && cardInventory.CardType == AbilityCardType.White) {
-                Input.Grab.ConsumeBuffer();
-                cardInventory.PopCard();
-                extData.UseCardCooldown = MAX_USE_CARD_COOLDOWN;
+            var cardInventory = extData.CardInventory;
 
-                float newSpeed = player.Speed.Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
-
-                if (newSpeed < WHITE_DASH_SPEED)
-                    newSpeed = WHITE_DASH_SPEED;
-                
-                player.DashDir = Vector2.Zero;
-                player.Speed = Vector2.Zero;
-                Audio.Play(SFX.char_bad_dash_red_right, player.Position);
-                Celeste.Freeze(WHITE_CARD_REDIRECT_FREEZE);
-
+            if (cardInventory.CardType != AbilityCardType.White || !player.ShouldUseCard()) {
                 yield return null;
                 
-                player.DashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
-                player.Speed = newSpeed * player.DashDir;
+                continue;
+            }
+            
+            Input.Grab.ConsumeBuffer();
+            cardInventory.PopCard();
+            extData.UseCardCooldown = MAX_USE_CARD_COOLDOWN;
+
+            float newSpeed = player.Speed.Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
+
+            if (newSpeed < WHITE_DASH_SPEED)
+                newSpeed = WHITE_DASH_SPEED;
+
+            player.DashDir = Vector2.Zero;
+            player.Speed = Vector2.Zero;
+            player.Sprite.Scale = Vector2.One;
+            Audio.Play(SFX.char_bad_dash_red_right, player.Position);
+            Celeste.Freeze(WHITE_CARD_REDIRECT_FREEZE);
+
+            yield return null;
+
+            player.DashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
+            player.Speed = newSpeed * player.DashDir;
+
+            if (player.DashDir.X == 0f) {
+                player.Sprite.Scale = new Vector2(WHITE_DASH_STRETCH.Y, WHITE_DASH_STRETCH.X);
+                player.Sprite.Rotation = 0f;
+            }
+            else {
+                player.Sprite.Scale = WHITE_DASH_STRETCH;
+                player.Sprite.Rotation = (Math.Sign(player.DashDir.X) * player.DashDir).Angle();
             }
 
             yield return null;
@@ -407,6 +448,11 @@ public static class PlayerExtensions {
     private static void WhiteDashEnd(this Player player) {
         var extData = player.ExtData();
 
+        player.Sprite.Scale = Vector2.One;
+        player.Sprite.Rotation = 0f;
+        player.Sprite.Origin.Y = 32f;
+        player.Sprite.Position.Y = 0f;
+        player.Hair.Visible = true;
         extData.WhiteDashSoundSource.Stop();
         Audio.Play(SFX.char_bad_dreamblock_exit);
         Audio.Play(SFX.game_05_redbooster_end);
@@ -454,7 +500,11 @@ public static class PlayerExtensions {
         player.StateMachine.SetCallbacks((int) CustomState.GreenDive, player.GreenDiveUpdate);
         player.StateMachine.SetCallbacks((int) CustomState.RedBoostDash, null, player.RedBoostDashCoroutine);
         player.StateMachine.SetCallbacks((int) CustomState.WhiteDash, null, player.WhiteDashCoroutine, null, player.WhiteDashEnd);
-        ExtendedVariantsModule.Session.OverriddenVariantsInRoom.Remove(ExtendedVariantsModule.Variant.Friction);
+        
+        var variants = ExtendedVariantsModule.Session.OverriddenVariantsInRoom;
+        
+        ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.Friction, 1f, false, false, false, false);
+        ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.DisableNeutralJumping, true, false, false, false, false);
     }
 
     private static void Player_ctor_il(ILContext il) {
@@ -525,7 +575,7 @@ public static class PlayerExtensions {
         object branch = cursor.Prev.Operand;
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(IsCustomDash)));
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(IsInCustomDash)));
         cursor.Emit(OpCodes.Brtrue_S, branch);
         
         cursor.Index = -1;
@@ -551,7 +601,7 @@ public static class PlayerExtensions {
         object branch = cursor.Prev.Operand;
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(IsCustomDash)));
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(IsInCustomDash)));
         cursor.Emit(OpCodes.Brtrue_S, branch);
 
         cursor.GotoNext(
@@ -633,6 +683,19 @@ public static class PlayerExtensions {
 
         extData.BlueDashHyperGraceTimer = 0f;
         dashBegin(player);
+    }
+
+    private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite updateSprite, Player player) {
+        int state = player.StateMachine.State;
+        
+        if (!player.IsInCustomDash())
+            updateSprite(player);
+        else if (state == (int) CustomState.RedBoostDash) {
+            if (player.Ducking)
+                player.Sprite.Play("duck");
+            else
+                player.Sprite.Play("dash");
+        }
     }
 
     public class Data {
