@@ -25,15 +25,16 @@ public class HeavenRushModule : EverestModule {
     public override void Load() {
         PlayerExtensions.Load();
         InputExtensions.Load();
+        LevelExtensions.Load();
     }
 
     public override void Initialize() {
-        PlayerExtensions.Initialize();
         InputExtensions.Initialize();
     }
 
     public override void Unload() {
         PlayerExtensions.Unload();
         InputExtensions.Unload();
+        LevelExtensions.Unload();
     }
 }

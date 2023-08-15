@@ -11,11 +11,6 @@ using MonoMod.Utils;
 namespace Celeste.Mod.HeavenRush;
 
 public static class PlayerExtensions {
-    private const float GROUND_BOOST_FRICTION = 0.25f;
-    private const float GROUND_BOOST_SPEED = 325f;
-    private const float GROUND_BOOST_ACCELERATION = 650f;
-    private const float GROUND_BOOST_PARTICLE_INTERVAL = 0.004f;
-    private static ParticleType GROUND_BOOST_PARTICLE;
     private const float MAX_USE_CARD_COOLDOWN = 0.1f;
     private const float YELLOW_CARD_FREEZE = 0.033f;
     private const float YELLOW_BOUNCE_MIN_X = 80f;
@@ -42,6 +37,7 @@ public static class PlayerExtensions {
     private static readonly Vector2 RED_BOOST_DASH_SPEED = new(280f, 240f);
     private const float RED_BOOST_DASH_DURATION = 0.15f;
     private const float RED_BOOST_DURATION = 0.8f;
+    private const float RED_BOOST_AIR_FRICTION = 0.5f;
     private const float RED_BOOST_TRAIL_INTERVAL = 0.016f;
     private const float RED_BOOST_TRAIL_DURATION = 0.33f;
     private const float WHITE_CARD_FREEZE = 0.05f;
@@ -51,6 +47,22 @@ public static class PlayerExtensions {
     private const float WHITE_DASH_TRAIL_INTERVAL = 0.016f;
     private const float WHITE_DASH_TRAIL_DURATION = 0.33f;
     private static readonly Vector2 WHITE_DASH_STRETCH = new(2f, 0.5f);
+    private const float GROUND_BOOST_FRICTION = 0.1f;
+    private const float GROUND_BOOST_SPEED = 240f;
+    private const float GROUND_BOOST_ACCELERATION = 650f;
+    private const float GROUND_BOOST_PARTICLE_INTERVAL = 0.004f;
+    private static readonly ParticleType GROUND_BOOST_PARTICLE = new() {
+        Color = Color.Aquamarine,
+        ColorMode = ParticleType.ColorModes.Static,
+        FadeMode = ParticleType.FadeModes.Linear,
+        LifeMin = 0.05f,
+        LifeMax = 0.1f,
+        Size = 1f,
+        SpeedMin = 60f,
+        SpeedMax = 120f,
+        DirectionRange = 0.7f
+    };
+    private const float GROUND_BOOST_PARTICLE_ANGLE = 0.4f;
 
     private static IDetour il_celeste_Player_orig_Update;
     
@@ -66,17 +78,6 @@ public static class PlayerExtensions {
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
-    }
-
-    public static void Initialize() {
-        GROUND_BOOST_PARTICLE = new ParticleType(Player.P_DashA) {
-            Color = Color.Aquamarine,
-            SpeedMin = 10f,
-            SpeedMax = 20f,
-            LifeMin = 0.15f,
-            LifeMax = 0.25f,
-            FadeMode = ParticleType.FadeModes.Linear
-        };
     }
 
     public static void Unload() {
@@ -267,7 +268,7 @@ public static class PlayerExtensions {
         (int) CustomState.WhiteDash;
 
     private static float GetUltraBoostSpeed(this Player player) => player.StateMachine.State switch {
-        (int) CustomState.RedBoostDash when Math.Abs(player.Speed.X) < GROUND_BOOST_SPEED => player.DashDir.X * GROUND_BOOST_SPEED,
+        (int) CustomState.RedBoostDash when Math.Abs(player.Speed.X) < RED_BOOST_DASH_SPEED.X => player.DashDir.X * RED_BOOST_DASH_SPEED.X,
         (int) CustomState.RedBoostDash => player.Speed.X,
         (int) CustomState.WhiteDash => player.DashDir.X * player.Speed.Length(),
         _ => player.Speed.X * 1.2f
@@ -277,7 +278,7 @@ public static class PlayerExtensions {
         var extData = player.ExtData();
         var dynamicData = DynamicData.For(player);
         
-        player.SetGroundBoost((extData.RedBoostTimer > 0f || extData.GroundBoostSources > 0) && player.Speed.Y >= 0f && dynamicData.Get<bool>("onGround"));
+        player.SetGroundBoost((extData.RedBoost || extData.GroundBoostSources > 0) && player.Speed.Y >= 0f && dynamicData.Get<bool>("onGround"));
     }
 
     private static IEnumerator BlueDashCoroutine(this Player player) {
@@ -320,12 +321,18 @@ public static class PlayerExtensions {
     }
 
     private static int GreenDiveUpdate(this Player player) {
+        if (player.CanDash) {
+            player.Sprite.Scale = Vector2.One;
+            
+            return player.StartDash();
+        }
+        
         player.UpdateTrail(Color.Green, GREEN_DIVE_TRAIL_INTERVAL, GREEN_DIVE_TRAIL_DURATION);
         player.Sprite.Scale = GREEN_DIVE_STRETCH;
         
         return (int) CustomState.GreenDive;
     }
-
+    
     private static IEnumerator RedBoostDashCoroutine(this Player player) {
         yield return null;
         
@@ -333,28 +340,28 @@ public static class PlayerExtensions {
         var extData = player.ExtData();
         
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
+        extData.RedBoost = true;
         extData.RedBoostTimer = RED_BOOST_DURATION;
         extData.CustomTrailTimer = RED_BOOST_TRAIL_INTERVAL;
 
         var dashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
-        var newSpeed = RED_BOOST_DASH_SPEED * dashDir;
         
-        if (dynamicData.Get<bool>("onGround") && dashDir.X != 0f && dashDir.Y >= 0f && player.Speed.Y >= 0f) {
-            player.Ducking = dashDir.Y > 0f;
+        if (dynamicData.Get<bool>("onGround") && dashDir.X != 0f && dashDir.Y > 0f) {
             dashDir.X = Math.Sign(dashDir.X);
             dashDir.Y = 0f;
-            newSpeed.X = dashDir.X * GROUND_BOOST_SPEED;
-            newSpeed.Y = 0f;
+            player.Ducking = true;
         }
         
         player.DashDir = dashDir;
         
+        var newSpeed = RED_BOOST_DASH_SPEED * dashDir;
         float beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").X;
         
         if (Math.Sign(newSpeed.X) == Math.Sign(beforeDashSpeed) && Math.Abs(newSpeed.X) < Math.Abs(beforeDashSpeed))
             newSpeed.X = beforeDashSpeed;
 
         player.Speed = newSpeed;
+        ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.AirFriction, RED_BOOST_AIR_FRICTION, false, false, false, false);
 
         for (float timer = 0f; timer < RED_BOOST_DASH_DURATION; timer += Engine.DeltaTime) {
             player.UpdateTrail(Color.Red, RED_BOOST_TRAIL_INTERVAL, RED_BOOST_TRAIL_DURATION);
@@ -402,10 +409,16 @@ public static class PlayerExtensions {
         extData.CustomTrailTimer = WHITE_DASH_TRAIL_INTERVAL;
 
         while (true) {
-            player.UpdateTrail(Color.White, WHITE_DASH_TRAIL_INTERVAL, WHITE_DASH_TRAIL_DURATION);
-            
-            var cardInventory = extData.CardInventory;
+            if (player.CanDash) {
+                player.StateMachine.State = player.StartDash();
 
+                yield break;
+            }
+            
+            player.UpdateTrail(Color.White, WHITE_DASH_TRAIL_INTERVAL, WHITE_DASH_TRAIL_DURATION);
+
+            var cardInventory = extData.CardInventory;
+            
             if (cardInventory.CardType != AbilityCardType.White || !player.ShouldUseCard()) {
                 yield return null;
                 
@@ -500,11 +513,12 @@ public static class PlayerExtensions {
         player.StateMachine.SetCallbacks((int) CustomState.GreenDive, player.GreenDiveUpdate);
         player.StateMachine.SetCallbacks((int) CustomState.RedBoostDash, null, player.RedBoostDashCoroutine);
         player.StateMachine.SetCallbacks((int) CustomState.WhiteDash, null, player.WhiteDashCoroutine, null, player.WhiteDashEnd);
+
+        var triggerManager = ExtendedVariantsModule.Instance.TriggerManager;
         
-        var variants = ExtendedVariantsModule.Session.OverriddenVariantsInRoom;
-        
-        ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.Friction, 1f, false, false, false, false);
-        ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.DisableNeutralJumping, true, false, false, false, false);
+        triggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.Friction, 1f, false, false, false, false);
+        triggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.AirFriction, 1f, false, false, false, false);
+        triggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.DisableNeutralJumping, true, false, false, false, false);
     }
 
     private static void Player_ctor_il(ILContext il) {
@@ -532,20 +546,28 @@ public static class PlayerExtensions {
 
         extData.RedBoostTimer -= Engine.DeltaTime;
         
-        if (extData.RedBoostTimer < 0f)
+        if (extData.RedBoostTimer <= 0f) {
+            if (extData.RedBoost) {
+                ExtendedVariantsModule.Instance.TriggerManager.OnEnteredInTrigger(ExtendedVariantsModule.Variant.AirFriction, 1f, false, false, false, false);
+                extData.RedBoost = false;
+            }
+            
             extData.RedBoostTimer = 0f;
+        }
 
         update(player);
 
         if (extData.GroundBoost && player.Speed.X != 0f) {
-            extData.GroundBoostParticleTimer += Engine.DeltaTime;
-
             var level = dynamicData.Get<Level>("level");
 
-            while (extData.GroundBoostParticleTimer > 0f) {
-                level.ParticlesFG.Emit(GROUND_BOOST_PARTICLE, player.Position, (-player.Speed).Angle() + Calc.Random.Range(-1f, 1f));
-                extData.GroundBoostParticleTimer -= GROUND_BOOST_PARTICLE_INTERVAL;
+            while (extData.GroundBoostParticleTimer < Engine.DeltaTime) {
+                level.ParticlesFG.Emit(GROUND_BOOST_PARTICLE,
+                    Vector2.Lerp(player.PreviousPosition, player.Position, extData.GroundBoostParticleTimer / Engine.DeltaTime),
+                    player.Speed.X > 0f ? (float) Math.PI + GROUND_BOOST_PARTICLE_ANGLE : -GROUND_BOOST_PARTICLE_ANGLE);
+                extData.GroundBoostParticleTimer += GROUND_BOOST_PARTICLE_INTERVAL;
             }
+
+            extData.GroundBoostParticleTimer -= Engine.DeltaTime;
         }
         else
             extData.GroundBoostParticleTimer = 0f;
@@ -645,7 +667,7 @@ public static class PlayerExtensions {
     private static int Player_NormalUpdate(On.Celeste.Player.orig_NormalUpdate normalUpdate, Player player) {
         var extData = player.ExtData();
         
-        if (extData.RedBoostTimer > 0f)
+        if (extData.RedBoost)
             player.UpdateTrail(Color.Red, RED_BOOST_TRAIL_INTERVAL, RED_BOOST_TRAIL_DURATION);
         
         int moveX = Input.MoveX.Value;
@@ -702,6 +724,7 @@ public static class PlayerExtensions {
         public readonly CardInventory CardInventory = new();
         public float UseCardCooldown;
         public float BlueDashHyperGraceTimer;
+        public bool RedBoost;
         public float RedBoostTimer;
         public SoundSource WhiteDashSoundSource;
         public float CustomTrailTimer;
