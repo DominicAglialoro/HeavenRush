@@ -1,9 +1,8 @@
 namespace Celeste.Mod.HeavenRush; 
 
 public enum CustomState {
-    BlueDash = 26,
+    BlueDash,
     GreenDive,
     RedBoostDash,
-    WhiteDash,
-    Count
+    WhiteDash
 }
