@@ -22,7 +22,7 @@ public static class PlayerExtensions {
     private const float BLUE_DASH_SPEED = 960f;
     private const float BLUE_DASH_END_SPEED = 175f;
     private const float BLUE_DASH_DURATION = 0.1f;
-    private const float BLUE_DASH_ALLOW_COYOTE_AT = 0.066f;
+    private const float BLUE_DASH_ALLOW_JUMP_AT = 0.066f;
     private const float BLUE_DASH_HYPER_GRACE_PERIOD = 0.033f;
     private const float BLUE_DASH_TRAIL_INTERVAL = 0.016f;
     private const float BLUE_DASH_TRAIL_DURATION = 0.66f;
@@ -65,13 +65,15 @@ public static class PlayerExtensions {
     };
     private const float GROUND_BOOST_PARTICLE_ANGLE = 0.4f;
 
-    private static IDetour il_celeste_Player_orig_Update;
+    private static IDetour Celeste_Player_get_DashAttacking;
+    private static IDetour il_Celeste_Player_orig_Update;
     
     public static void Load() {
         On.Celeste.Player.ctor += Player_ctor;
         IL.Celeste.Player.ctor += Player_ctor_il;
+        Celeste_Player_get_DashAttacking = new Hook(typeof(Player).GetPropertyUnconstrained("DashAttacking").GetGetMethod(), Player_get_DashAttacking);
         On.Celeste.Player.Update += Player_Update;
-        il_celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
+        il_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
         IL.Celeste.Player.OnCollideH += Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV += Player_OnCollideV_il;
         On.Celeste.Player.Jump += Player_Jump;
@@ -81,11 +83,15 @@ public static class PlayerExtensions {
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
     }
 
+    private static bool Player_get_DashAttacking(Func<Player, bool> dashAttacking, Player player)
+        => dashAttacking(player) || player.StateMachine.State is (int) CustomState.BlueDash or (int) CustomState.RedBoostDash;
+
     public static void Unload() {
         On.Celeste.Player.ctor -= Player_ctor;
         IL.Celeste.Player.ctor -= Player_ctor_il;
+        Celeste_Player_get_DashAttacking.Dispose();
         On.Celeste.Player.Update -= Player_Update;
-        il_celeste_Player_orig_Update.Dispose();
+        il_Celeste_Player_orig_Update.Dispose();
         IL.Celeste.Player.OnCollideH -= Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV -= Player_OnCollideV_il;
         On.Celeste.Player.Jump -= Player_Jump;
@@ -296,6 +302,7 @@ public static class PlayerExtensions {
         player.DashDir.Y = 0f;
         player.Speed.X = aimX * BLUE_DASH_SPEED;
         player.Speed.Y = 0f;
+        extData.BlueDash = true;
         extData.CustomTrailTimer = BLUE_DASH_TRAIL_INTERVAL;
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
 
@@ -303,24 +310,50 @@ public static class PlayerExtensions {
             player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(BLUE_DASH_STRETCH, Vector2.One, timer / BLUE_DASH_DURATION));
             player.UpdateTrail(Color.Blue, BLUE_DASH_TRAIL_INTERVAL, BLUE_DASH_TRAIL_DURATION);
             
-            if (timer < BLUE_DASH_ALLOW_COYOTE_AT)
+            if (timer < BLUE_DASH_ALLOW_JUMP_AT)
                 dynamicData.Set("jumpGraceTimer", 0f);
+            else if (Input.Jump.Pressed && dynamicData.Get<bool>("onGround")) {
+                extData.BlueDash = false;
+                player.Ducking = true;
+                dynamicData.Invoke("SuperJump");
+                player.StateMachine.State = 0;
+
+                yield break;
+            }
             
+            foreach (var jumpThru in player.Scene.Tracker.GetEntities<JumpThru>()) {
+                if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f && !dynamicData.Invoke<bool>("DashCorrectCheck", Vector2.UnitY * (jumpThru.Top - player.Bottom)))
+                    player.MoveVExact((int) (jumpThru.Top - player.Bottom));
+            }
+
             yield return null;
         }
+        
+        int facing = (int) player.Facing;
 
+        if (facing == Math.Sign(player.DashDir.X))
+            player.Speed.X = facing * BLUE_DASH_END_SPEED;
+        else
+            player.Speed.X = 0f;
+
+        extData.BlueDash = false;
         extData.BlueDashHyperGraceTimer = BLUE_DASH_HYPER_GRACE_PERIOD;
         player.StateMachine.State = 0;
     }
 
     private static void BlueDashEnd(this Player player) {
-        int facing = (int) player.Facing;
+        var extData = player.ExtData();
         
-        if (facing == Math.Sign(player.DashDir.X))
-            player.Speed.X = facing * BLUE_DASH_END_SPEED;
-        else
-            player.Speed.X = 0f;
-        
+        if (extData.BlueDash) {
+            int facing = (int) player.Facing;
+
+            if (facing == Math.Sign(player.DashDir.X))
+                player.Speed.X = facing * BLUE_DASH_END_SPEED;
+            else
+                player.Speed.X = 0f;
+        }
+
+        extData.BlueDash = false;
         player.Sprite.Scale = Vector2.One;
     }
 
@@ -371,10 +404,17 @@ public static class PlayerExtensions {
             player.UpdateTrail(Color.Red, RED_BOOST_TRAIL_INTERVAL, RED_BOOST_TRAIL_DURATION);
             
             if (Input.Jump.Pressed && dynamicData.Get<float>("jumpGraceTimer") > 0f) {
-                player.StateMachine.State = 0;
                 player.Jump();
+                player.StateMachine.State = 0;
                 
                 yield break;
+            }
+
+            if (player.DashDir.Y == 0f) {
+                foreach (var jumpThru in player.Scene.Tracker.GetEntities<JumpThru>()) {
+                    if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f && !dynamicData.Invoke<bool>("DashCorrectCheck", Vector2.UnitY * (jumpThru.Top - player.Bottom)))
+                        player.MoveVExact((int) (jumpThru.Top - player.Bottom));
+                }
             }
             
             yield return null;
@@ -660,6 +700,7 @@ public static class PlayerExtensions {
         if (extData.BlueDashHyperGraceTimer > 0f) {
             player.Ducking = true;
             dynamicData.Invoke("SuperJump");
+            player.StateMachine.State = 0;
 
             return;
         }
@@ -729,6 +770,7 @@ public static class PlayerExtensions {
     public class Data {
         public readonly CardInventory CardInventory = new();
         public float UseCardCooldown;
+        public bool BlueDash;
         public float BlueDashHyperGraceTimer;
         public bool RedBoost;
         public float RedBoostTimer;
