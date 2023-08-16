@@ -1,9 +1,9 @@
 local textures = {
-	"AbilityCard/CardYellow",
-	"AbilityCard/CardBlue",
-	"AbilityCard/CardGreen",
-	"AbilityCard/CardRed",
-	"AbilityCard/CardWhite"
+	"Loenn/AbilityCard/CardYellow",
+	"Loenn/AbilityCard/CardBlue",
+	"Loenn/AbilityCard/CardGreen",
+	"Loenn/AbilityCard/CardRed",
+	"Loenn/AbilityCard/CardWhite"
 }
 
 local abilityCard = {}
