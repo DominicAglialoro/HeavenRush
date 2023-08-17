@@ -11,6 +11,8 @@ public static class LevelExtensions {
 
     private static void Level_LoadLevel(On.Celeste.Level.orig_LoadLevel loadLevel, Level level, Player.IntroTypes playerintro, bool isfromloader) {
         loadLevel(level, playerintro, isfromloader);
+        
+        Input.Grab.BufferTime = HeavenRushModule.Session.HeavenRushModeEnabled ? 0.08f : 0f;
 
         if (level.Tracker.CountEntities<CardInventoryIndicator>() == 0) {
             level.Add(new CardInventoryIndicator());

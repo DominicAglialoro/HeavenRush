@@ -6,7 +6,7 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush;
 
-[CustomEntity("HeavenRush/AbilityCard"), Tracked]
+[CustomEntity("HeavenRush/AbilityCard")]
 public class AbilityCard : Entity {
     private AbilityCardType cardType;
     private Image texture;
@@ -15,7 +15,7 @@ public class AbilityCard : Entity {
     private SineWave sine;
 
     public AbilityCard(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        cardType = (AbilityCardType) data.Int("cardType", 0);
+        cardType = data.Enum<AbilityCardType>("cardType");
 
         var color = cardType switch {
             AbilityCardType.Yellow => Color.Yellow,

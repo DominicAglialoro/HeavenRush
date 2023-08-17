@@ -7,7 +7,7 @@ using MonoMod.Utils;
 namespace Celeste.Mod.HeavenRush; 
 
 public static class StateMachineExtensions {
-    public static int AddState(this StateMachine stateMachine, Func<int> onUpdate, Func<IEnumerator> coroutine = null, Action begin = null, Action end = null) {
+    public static int AddState(this StateMachine stateMachine, Func<int> onUpdate = null, Func<IEnumerator> coroutine = null, Action begin = null, Action end = null) {
         var dynamicData = DynamicData.For(stateMachine);
         var updates = dynamicData.Get<Func<int>[]>("updates");
         var coroutines = dynamicData.Get<Func<IEnumerator>[]>("coroutines");

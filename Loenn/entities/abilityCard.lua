@@ -1,11 +1,3 @@
-local textures = {
-	"Loenn/AbilityCard/CardYellow",
-	"Loenn/AbilityCard/CardBlue",
-	"Loenn/AbilityCard/CardGreen",
-	"Loenn/AbilityCard/CardRed",
-	"Loenn/AbilityCard/CardWhite"
-}
-
 local abilityCard = {}
 
 abilityCard.name = "HeavenRush/AbilityCard"
@@ -14,37 +6,50 @@ abilityCard.placements = {
 	{
 		name = "yellow",
 		data = {
-			cardType = 0
+			cardType = "Yellow"
 		}
 	},
 	{
 		name = "blue",
 		data = {
-			cardType = 1
+			cardType = "Blue"
 		}
 	},
 	{
 		name = "green",
 		data = {
-			cardType = 2
+			cardType = "Green"
 		}
 	},
 	{
 		name = "red",
 		data = {
-			cardType = 3
+			cardType = "Red"
 		}
 	},
 	{
 		name = "white",
 		data = {
-			cardType = 4
+			cardType = "White"
 		}
 	}
 }
 
+abilityCard.fieldInformation = {
+	cardType = {
+		options = {
+			"Yellow",
+			"Blue",
+			"Green",
+			"Red",
+			"White"
+		},
+		editable = false
+	}
+}
+
 function abilityCard.texture(room, entity)
-	return textures[entity.cardType + 1]
+	return "Loenn/AbilityCard/Card" .. entity.cardType
 end
 
 return abilityCard

@@ -3,3 +3,5 @@ entities.HeavenRush/AbilityCard.placements.name.blue=Ability Card Blue
 entities.HeavenRush/AbilityCard.placements.name.green=Ability Card Green
 entities.HeavenRush/AbilityCard.placements.name.red=Ability Card Red
 entities.HeavenRush/AbilityCard.placements.name.white=Ability Card White
+
+triggers.HeavenRush/HeavenRushModeTrigger.placements.name.trigger=Heaven Rush Mode Trigger

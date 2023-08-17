@@ -5,11 +5,11 @@ namespace Celeste.Mod.HeavenRush;
 public class HeavenRushModule : EverestModule {
     public static HeavenRushModule Instance { get; private set; }
 
-    public override Type SettingsType => typeof(HeavenRushModuleSettings);
-    public static HeavenRushModuleSettings Settings => (HeavenRushModuleSettings) Instance._Settings;
+    public override Type SettingsType => typeof(HeavenRushSettings);
+    public static HeavenRushSettings Settings => (HeavenRushSettings) Instance._Settings;
 
-    public override Type SessionType => typeof(HeavenRushModuleSession);
-    public static HeavenRushModuleSession Session => (HeavenRushModuleSession) Instance._Session;
+    public override Type SessionType => typeof(HeavenRushSession);
+    public static HeavenRushSession Session => (HeavenRushSession) Instance._Session;
 
     public HeavenRushModule() {
         Instance = this;
@@ -28,9 +28,7 @@ public class HeavenRushModule : EverestModule {
         LevelExtensions.Load();
     }
 
-    public override void Initialize() {
-        InputExtensions.Initialize();
-    }
+    public override void Initialize() { }
 
     public override void Unload() {
         PlayerExtensions.Unload();
