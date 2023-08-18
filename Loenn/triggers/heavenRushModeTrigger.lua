@@ -1,6 +1,6 @@
 local heavenRushModeTrigger = {}
 
-heavenRushModeTrigger.name = "HeavenRush/HeavenRushModeTrigger"
+heavenRushModeTrigger.name = "heavenRush/heavenRushModeTrigger"
 heavenRushModeTrigger.placements = {
 	name = "trigger",
 	data = {

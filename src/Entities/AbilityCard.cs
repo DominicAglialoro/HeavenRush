@@ -6,10 +6,10 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush;
 
-[CustomEntity("HeavenRush/AbilityCard")]
+[CustomEntity("heavenRush/abilityCard")]
 public class AbilityCard : Entity {
     private AbilityCardType cardType;
-    private Image texture;
+    private Image image;
     private Image outline;
     private Sprite flash;
     private SineWave sine;
@@ -27,12 +27,12 @@ public class AbilityCard : Entity {
         };
         
         Collider = new Hitbox(16f, 16f, -8f, -8f);
-        Add(texture = new Image(GFX.Game["AbilityCard/texture"]));
-        texture.CenterOrigin();
-        texture.SetColor(color);
-        Add(outline = new Image(GFX.Game["AbilityCard/outline"]));
+        Add(image = new Image(GFX.Game["objects/abilityCard/texture"]));
+        image.CenterOrigin();
+        image.SetColor(color);
+        Add(outline = new Image(GFX.Game["objects/abilityCard/outline"]));
         outline.CenterOrigin();
-        Add(flash = new Sprite(GFX.Game, "AbilityCard/flash"));
+        Add(flash = new Sprite(GFX.Game, "objects/abilityCard/flash"));
         flash.Add("flash", "", 0.1f);
         flash.OnFinish = _ => flash.Visible = false;
         flash.CenterOrigin();
@@ -62,5 +62,5 @@ public class AbilityCard : Entity {
         RemoveSelf();
     }
     
-    private void UpdateY() => texture.Y = outline.Y = flash.Y = sine.Value;
+    private void UpdateY() => image.Y = outline.Y = flash.Y = sine.Value;
 }

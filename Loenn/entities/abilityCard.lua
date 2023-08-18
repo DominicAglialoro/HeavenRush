@@ -1,6 +1,6 @@
 local abilityCard = {}
 
-abilityCard.name = "HeavenRush/AbilityCard"
+abilityCard.name = "heavenRush/abilityCard"
 abilityCard.depth = -100
 abilityCard.placements = {
 	{
@@ -49,7 +49,7 @@ abilityCard.fieldInformation = {
 }
 
 function abilityCard.texture(room, entity)
-	return "Loenn/AbilityCard/Card" .. entity.cardType
+	return "loenn/abilityCard/card" .. entity.cardType
 end
 
 return abilityCard

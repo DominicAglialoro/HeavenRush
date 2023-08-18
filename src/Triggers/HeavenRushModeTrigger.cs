@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Celeste.Mod.HeavenRush.Triggers; 
 
-[CustomEntity("HeavenRush/HeavenRushModeTrigger")]
+[CustomEntity("heavenRush/heavenRushModeTrigger")]
 public class HeavenRushModeTrigger : Trigger {
     private bool newValue;
     

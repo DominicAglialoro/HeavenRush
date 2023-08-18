@@ -1,7 +1,9 @@
-entities.HeavenRush/AbilityCard.placements.name.yellow=Ability Card Yellow
-entities.HeavenRush/AbilityCard.placements.name.blue=Ability Card Blue
-entities.HeavenRush/AbilityCard.placements.name.green=Ability Card Green
-entities.HeavenRush/AbilityCard.placements.name.red=Ability Card Red
-entities.HeavenRush/AbilityCard.placements.name.white=Ability Card White
+entities.heavenRush/abilityCard.placements.name.yellow=Ability Card Yellow
+entities.heavenRush/abilityCard.placements.name.blue=Ability Card Blue
+entities.heavenRush/abilityCard.placements.name.green=Ability Card Green
+entities.heavenRush/abilityCard.placements.name.red=Ability Card Red
+entities.heavenRush/abilityCard.placements.name.white=Ability Card White
 
-triggers.HeavenRush/HeavenRushModeTrigger.placements.name.trigger=Heaven Rush Mode Trigger
+entities.heavenRush/surfPlatform.placements.name.platform=Surf Platform
+
+triggers.heavenRush/heavenRushModeTrigger.placements.name.trigger=Heaven Rush Mode Trigger
