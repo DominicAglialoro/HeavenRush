@@ -27,6 +27,7 @@ public class AbilityCard : Entity {
         };
         
         Collider = new Hitbox(16f, 16f, -8f, -8f);
+        Depth = -100;
         
         Add(image = new Image(GFX.Game["objects/abilityCard/texture"]));
         image.CenterOrigin();

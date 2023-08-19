@@ -13,7 +13,6 @@ public class HeavenRushModeTrigger : Trigger {
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        ((Level) Scene).Session.Inventory = new PlayerInventory(1, true, false, true);
         HeavenRushModule.Session.HeavenRushModeEnabled = newValue;
         Input.Grab.BufferTime = newValue ? 0.08f : 0f;
     }

@@ -35,7 +35,20 @@ public static class PlayerExtensions {
     private const float GROUND_BOOST_SPEED = 240f;
     private const float GROUND_BOOST_ACCELERATION = 650f;
 
-    private static readonly ParticleType GROUND_BOOST_PARTICLE = new() {
+    private static readonly ParticleType RED_BOOST_PARTICLE = new() {
+        Color = Color.Red,
+        Color2 = Color.Orange,
+        ColorMode = ParticleType.ColorModes.Choose,
+        FadeMode = ParticleType.FadeModes.Late,
+        LifeMin = 0.1f,
+        LifeMax = 0.3f,
+        Size = 1f,
+        SpeedMin = 10f,
+        SpeedMax = 20f,
+        DirectionRange = MathHelper.TwoPi
+    };
+
+    private static readonly ParticleType SURF_PARTICLE = new() {
         Color = Color.Aquamarine,
         ColorMode = ParticleType.ColorModes.Static,
         FadeMode = ParticleType.FadeModes.Late,
@@ -44,18 +57,6 @@ public static class PlayerExtensions {
         Size = 1f,
         SpeedMin = 60f,
         SpeedMax = 120f,
-        DirectionRange = 0.7f
-    };
-    
-    private static readonly ParticleType GROUND_BOOST_PARTICLE_RED = new() {
-        Color = Color.Red,
-        ColorMode = ParticleType.ColorModes.Static,
-        FadeMode = ParticleType.FadeModes.Late,
-        LifeMin = 0.03f,
-        LifeMax = 0.06f,
-        Size = 1f,
-        SpeedMin = 120f,
-        SpeedMax = 240f,
         DirectionRange = 0.7f
     };
 
@@ -155,23 +156,29 @@ public static class PlayerExtensions {
         
         Audio.Play(SFX.game_gen_thing_booped, player.Position);
         Celeste.Freeze(0.033f);
-        dynamicData.Get<Level>("level").Add(Engine.Pooler.Create<SpeedRing>().Init(player.Center, 0.5f * (float) Math.PI, Color.White));
-
-        int moveX = Input.MoveX.Value;
-        float newSpeedX = player.Speed.X + moveX * YELLOW_BOUNCE_ADD_X;
-
-        if (moveX != 0 && moveX * newSpeedX < YELLOW_BOUNCE_MIN_X)
-            newSpeedX = moveX * YELLOW_BOUNCE_MIN_X;
-
-        float newSpeedY = player.Speed.Y + YELLOW_BOUNCE_ADD_Y;
-
-        if (newSpeedY > YELLOW_BOUNCE_MIN_Y)
-            newSpeedY = YELLOW_BOUNCE_MIN_Y;
-
+        dynamicData.Get<Level>("level").Add(Engine.Pooler.Create<SpeedRing>().Init(player.Center, MathHelper.PiOver2, Color.White));
         player.ResetStateValues();
-        player.Speed.X = newSpeedX;
-        player.Speed.Y = newSpeedY;
-        player.Sprite.Scale = new(0.4f, 1.8f);
+        player.Sprite.Scale = new Vector2(0.4f, 1.8f);
+
+        var previousSpeed = player.Speed;
+        
+        player.Speed = Vector2.Zero;
+
+        player.Add(new Coroutine(Util.AfterFrame(() => {
+            int moveX = Input.MoveX.Value;
+            float newSpeedX = previousSpeed.X + moveX * YELLOW_BOUNCE_ADD_X;
+
+            if (moveX != 0 && moveX * newSpeedX < YELLOW_BOUNCE_MIN_X)
+                newSpeedX = moveX * YELLOW_BOUNCE_MIN_X;
+
+            float newSpeedY = previousSpeed.Y + YELLOW_BOUNCE_ADD_Y;
+
+            if (newSpeedY > YELLOW_BOUNCE_MIN_Y)
+                newSpeedY = YELLOW_BOUNCE_MIN_Y;
+            
+            player.Speed.X = newSpeedX;
+            player.Speed.Y = newSpeedY;
+        })));
 
         return 0;
     }
@@ -301,7 +308,7 @@ public static class PlayerExtensions {
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
 
         for (float timer = 0f; timer < BLUE_DASH_DURATION; timer += Engine.DeltaTime) {
-            player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
+            player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new Vector2(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
             player.UpdateTrail(Color.Blue, 0.016f, 0.66f);
             
             if (timer < BLUE_DASH_ALLOW_JUMP_AT)
@@ -365,7 +372,7 @@ public static class PlayerExtensions {
         }
         
         player.UpdateTrail(Color.Green, 0.016f, 0.33f);
-        player.Sprite.Scale = new(0.5f, 2f);
+        player.Sprite.Scale = new Vector2(0.5f, 2f);
         
         return extData.GreenDiveIndex;
     }
@@ -397,7 +404,7 @@ public static class PlayerExtensions {
         player.Speed = newSpeed;
 
         for (float timer = 0f; timer < RED_BOOST_DASH_DURATION; timer += Engine.DeltaTime) {
-            player.UpdateTrail(Color.Red, 0.016f, 0.33f);
+            player.UpdateTrail(Color.Red, 0.016f, 0.5f);
             
             if (Input.Jump.Pressed && dynamicData.Get<float>("jumpGraceTimer") > 0f) {
                 player.Jump();
@@ -690,23 +697,29 @@ public static class PlayerExtensions {
             extData.WhiteDashSuperGraceTimer = 0f;
 
         update(player);
+        
+        var level = dynamicData.Get<Level>("level");
 
-        if ((extData.RedBoostTimer > 0f || extData.GroundBoostSources > 0f) && dynamicData.Get<bool>("onGround") && Math.Abs(player.Speed.X) > 64f) {
-            var level = dynamicData.Get<Level>("level");
-            var particle = extData.RedBoostTimer > 0f ? GROUND_BOOST_PARTICLE_RED : GROUND_BOOST_PARTICLE;
+        if (extData.GroundBoostSources > 0f && dynamicData.Get<bool>("onGround") && Math.Abs(player.Speed.X) > 64f) {
             float interval = 0.008f / Math.Min(Math.Abs(player.Speed.X) / GROUND_BOOST_SPEED, 1f);
-            
-            extData.GroundBoostParticleTimer += Engine.DeltaTime;
+            var offset = -4f * Math.Sign(player.Speed.X) * Vector2.UnitX;
+            float angle = player.Speed.X > 0f ? MathHelper.Pi + 0.4f : -0.4f;
 
-            while (extData.GroundBoostParticleTimer > interval) {
-                level.ParticlesFG.Emit(particle,
-                    Vector2.Lerp(player.Position, player.PreviousPosition, extData.GroundBoostParticleTimer / Engine.DeltaTime) - 4f * Math.Sign(player.Speed.X) * Vector2.UnitX,
-                    player.Speed.X > 0f ? (float) Math.PI + 0.4f : -0.4f);
-                extData.GroundBoostParticleTimer -= interval;
-            }
+            foreach (var position in Util.TemporalLerp(ref extData.SurfParticleTimer, interval, player.PreviousPosition, player.Position, Engine.DeltaTime))
+                level.ParticlesBG.Emit(SURF_PARTICLE, position + offset, angle);
         }
         else
-            extData.GroundBoostParticleTimer = 0f;
+            extData.SurfParticleTimer = 0f;
+
+        if (extData.RedBoostTimer > 0f && player.Speed.Length() > 64f) {
+            float interval = 0.008f / Math.Min(Math.Abs(player.Speed.Length()) / RED_BOOST_DASH_SPEED.X, 1f);
+            var offset = -6f * Vector2.UnitY;
+            
+            foreach (var position in Util.TemporalLerp(ref extData.RedBoostParticleTimer, interval, player.PreviousPosition, player.Position, Engine.DeltaTime))
+                level.ParticlesBG.Emit(RED_BOOST_PARTICLE, 1, position + offset, 6f * Vector2.One);
+        }
+        else
+            extData.RedBoostParticleTimer = 0f;
     }
     
     private static void Player_orig_Update_il(ILContext il) {
@@ -865,10 +878,10 @@ public static class PlayerExtensions {
         if (!HeavenRushModule.Session.HeavenRushModeEnabled)
             return normalUpdate(player);
 
-        player.GetData(out var dynamicData, out var extData);
+        player.GetData(out _, out var extData);
         
         if (extData.RedBoostTimer > 0f)
-            player.UpdateTrail(Color.Red, 0.016f, 0.33f);
+            player.UpdateTrail(Color.Red * Math.Min(4f * extData.RedBoostTimer, 1f), 0.016f, 0.16f);
         
         int moveX = Input.MoveX.Value;
         
@@ -955,11 +968,12 @@ public static class PlayerExtensions {
         public bool KilledInBlueDash;
         public float BlueDashHyperGraceTimer;
         public float RedBoostTimer;
+        public float RedBoostParticleTimer;
         public float WhiteDashSuperGraceTimer;
         public SoundSource WhiteDashSoundSource;
         public float CustomTrailTimer;
         public bool GroundBoost;
         public int GroundBoostSources;
-        public float GroundBoostParticleTimer;
+        public float SurfParticleTimer;
     }
 }

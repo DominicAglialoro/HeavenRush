@@ -32,18 +32,19 @@ public class Demon : Entity {
     private ParticleType KILL_PARTICLE_SMALL = new() {
         Color = Color.Gray,
         Color2 = Color.Black,
-        ColorMode = ParticleType.ColorModes.Choose,
+        ColorMode = ParticleType.ColorModes.Static,
         FadeMode = ParticleType.FadeModes.Late,
-        LifeMin = 0.5f,
-        LifeMax = 0.8f,
+        LifeMin = 0.2f,
+        LifeMax = 0.3f,
         Size = 1f,
-        DirectionRange = 1.5f,
+        DirectionRange = 0.78f,
         SpeedMin = 20f,
         SpeedMax = 80f,
         SpeedMultiplier = 0.005f
     };
     
     private bool grounded;
+    private bool restoresDash;
     private Sprite body;
     private Image outline;
     private Image eyes;
@@ -54,8 +55,10 @@ public class Demon : Entity {
 
     public Demon(EntityData data, Vector2 offset) : base(data.Position + offset) {
         grounded = data.Bool("grounded");
+        restoresDash = data.Bool("restoresDash");
 
         Collider = new Circle(8f);
+        Depth = 100;
         
         Add(body = new Sprite(GFX.Game, "objects/demon/body"));
         body.AddLoop("body", "", 0.1f);
@@ -65,6 +68,9 @@ public class Demon : Entity {
         Add(outline = new Image(GFX.Game["objects/demon/outline"]));
         outline.CenterOrigin();
         
+        if (!restoresDash)
+            outline.Color = Color.Cyan;
+        
         Add(eyes = new Image(GFX.Game["objects/demon/eyes"]));
         eyes.CenterOrigin();
 
@@ -73,6 +79,9 @@ public class Demon : Entity {
             
             Add(feet);
             feet.CenterOrigin();
+            
+            if (!restoresDash)
+                feet.Color = Color.Cyan;
         }
         
         Add(sine = new SineWave(0.6f));
@@ -93,20 +102,40 @@ public class Demon : Entity {
         base.Update();
         UpdateVisual();
 
-        if (!alive && !CollideCheck<Player>())
+        if (Collidable && !alive && !CollideCheck<Player>())
             Collidable = false;
     }
 
     public void Die(float angle) {
         alive = false;
         Visible = false;
-        Add(new Coroutine(KilledCoroutine(angle)));
+
+        if (!restoresDash)
+            Collidable = false;
+        
+        Add(new Coroutine(Util.AfterFrame(() => SpawnKillParticles(angle))));
+        Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
     }
     
     private void Die(Player player) {
         alive = false;
         Visible = false;
-        Add(new Coroutine(KilledCoroutine(player)));
+
+        if (!restoresDash)
+            Collidable = false;
+        
+        Add(new Coroutine(Util.AfterFrame(() => {
+            var speed = player.Speed;
+
+            if (speed == Vector2.Zero)
+                speed = player.DashDir;
+
+            if (speed == Vector2.Zero)
+                SpawnKillParticles(player.Facing == Facings.Right ? 0f : MathHelper.Pi);
+            else
+                SpawnKillParticles(speed.Angle());
+        })));
+        Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
     }
 
     private void OnPlayer(Player player) {
@@ -116,7 +145,7 @@ public class Demon : Entity {
             Die(player);
         }
         
-        if (!alive && player.RefillDash())
+        if (restoresDash && !alive && player.RefillDash())
             Collidable = false;
     }
 
@@ -137,31 +166,6 @@ public class Demon : Entity {
 
     private void SpawnKillParticles(float angle) {
         level.ParticlesFG.Emit(KILL_PARTICLE_LARGE, 2, Position, 4f * Vector2.One, angle);
-        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 20, Position, 6f * Vector2.One, angle);
-    }
-
-    private IEnumerator KilledCoroutine(float angle) {
-        yield return null;
-        
-        SpawnKillParticles(angle);
-
-        yield return REMOVE_AFTER_KILL_TIME;
-        
-        RemoveSelf();
-    }
-    
-    private IEnumerator KilledCoroutine(Player player) {
-        yield return null;
-        
-        var speed = player.Speed;
-
-        if (speed != Vector2.Zero)
-            SpawnKillParticles(speed.Angle());
-        else
-            SpawnKillParticles(player.Facing == Facings.Right ? 0f : MathHelper.Pi);
-
-        yield return REMOVE_AFTER_KILL_TIME;
-        
-        RemoveSelf();
+        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 50, Position, 6f * Vector2.One, angle);
     }
 }
