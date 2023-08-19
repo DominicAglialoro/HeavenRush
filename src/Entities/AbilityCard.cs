@@ -6,7 +6,7 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush;
 
-[CustomEntity("heavenRush/abilityCard")]
+[CustomEntity("heavenRush/abilityCard"), Tracked]
 public class AbilityCard : Entity {
     private AbilityCardType cardType;
     private Image image;
@@ -27,19 +27,27 @@ public class AbilityCard : Entity {
         };
         
         Collider = new Hitbox(16f, 16f, -8f, -8f);
+        
         Add(image = new Image(GFX.Game["objects/abilityCard/texture"]));
         image.CenterOrigin();
         image.SetColor(color);
+        
         Add(outline = new Image(GFX.Game["objects/abilityCard/outline"]));
         outline.CenterOrigin();
+        
         Add(flash = new Sprite(GFX.Game, "objects/abilityCard/flash"));
         flash.Add("flash", "", 0.1f);
         flash.OnFinish = _ => flash.Visible = false;
+        flash.Color = Color.White * 0.5f;
         flash.CenterOrigin();
+        
         Add(new VertexLight(Color.Lerp(color, Color.White, 0.75f), 1f, 16, 48));
+        
         Add(sine = new SineWave(0.6f));
         sine.Randomize();
+        
         Add(new PlayerCollider(OnPlayer));
+        
         UpdateY();
     }
 
@@ -58,7 +66,7 @@ public class AbilityCard : Entity {
             return;
         
         Audio.Play(SFX.ui_world_journal_page_cover_forward, Position);
-        Celeste.Freeze(0.033f);
+        Celeste.Freeze(0.016f);
         RemoveSelf();
     }
     

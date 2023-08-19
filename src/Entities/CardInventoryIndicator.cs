@@ -47,6 +47,9 @@ public class CardInventoryIndicator : Entity {
 
     public override void Render() {
         base.Render();
+        
+        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
+            return;
 
         var player = Scene.Tracker.GetEntity<Player>();
         
