@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using FMOD.Studio;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using Monocle;
@@ -188,7 +187,7 @@ public static class PlayerExtensions {
         player.PrepareForCustomDash();
         extData.KilledInBlueDash = false;
         player.Sprite.Play("dash");
-        Util.PlaySound("event:/classic/sfx9", 2f, player.Position);
+        Audio.Play("event:/heavenRush/game/blue_dash", player.Position);
         Celeste.Freeze(0.05f);
 
         return extData.BlueDashIndex;
@@ -209,7 +208,7 @@ public static class PlayerExtensions {
         player.GetData(out _, out var extData);
         player.PrepareForCustomDash();
         player.Sprite.Play("dash");
-        Util.PlaySound("event:/classic/sfx3", 2f, player.Position);
+        Audio.Play("event:/heavenRush/game/red_boost_dash", player.Position);
         Celeste.Freeze(0.05f);
 
         return extData.RedBoostDashIndex;
@@ -384,6 +383,8 @@ public static class PlayerExtensions {
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
         extData.RedBoostTimer = RED_BOOST_DURATION;
         extData.CustomTrailTimer = 0.016f;
+        extData.RedBoostSoundSource.Play("event:/heavenRush/game/red_boost_sustain");
+        extData.RedBoostSoundSource.DisposeOnTransition = false;
 
         var dashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
         
@@ -644,6 +645,7 @@ public static class PlayerExtensions {
         
         dynamicData.Set("heavenRushData", extData);
         
+        player.Add(extData.RedBoostSoundSource = new SoundSource());
         player.Add(extData.WhiteDashSoundSource = new SoundSource());
 
         var stateMachine = player.StateMachine;
@@ -688,8 +690,12 @@ public static class PlayerExtensions {
 
         extData.RedBoostTimer -= Engine.DeltaTime;
         
-        if (extData.RedBoostTimer < 0f)
+        if (extData.RedBoostTimer <= 0f) {
             extData.RedBoostTimer = 0f;
+
+            if (extData.RedBoostSoundSource.Playing)
+                extData.RedBoostSoundSource.Stop();
+        }
 
         extData.WhiteDashSuperGraceTimer -= Engine.DeltaTime;
 
@@ -969,6 +975,7 @@ public static class PlayerExtensions {
         public float BlueDashHyperGraceTimer;
         public float RedBoostTimer;
         public float RedBoostParticleTimer;
+        public SoundSource RedBoostSoundSource;
         public float WhiteDashSuperGraceTimer;
         public SoundSource WhiteDashSoundSource;
         public float CustomTrailTimer;

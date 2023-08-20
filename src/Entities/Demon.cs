@@ -1,4 +1,3 @@
-using System.Collections;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -11,7 +10,7 @@ public class Demon : Entity {
 
     private ParticleType KILL_PARTICLE_LARGE = new() {
         Source = GFX.Game["particles/triangle"],
-        Color = Color.Gray,
+        Color = Color.White,
         Color2 = Color.Black,
         ColorMode = ParticleType.ColorModes.Fade,
         FadeMode = ParticleType.FadeModes.Late,
@@ -30,17 +29,22 @@ public class Demon : Entity {
     };
     
     private ParticleType KILL_PARTICLE_SMALL = new() {
-        Color = Color.Gray,
+        Source = GFX.Game["particles/triangle"],
+        Color = Color.White,
         Color2 = Color.Black,
-        ColorMode = ParticleType.ColorModes.Static,
+        ColorMode = ParticleType.ColorModes.Fade,
         FadeMode = ParticleType.FadeModes.Late,
         LifeMin = 0.2f,
         LifeMax = 0.3f,
-        Size = 1f,
+        Size = 0.5f,
         DirectionRange = 0.78f,
         SpeedMin = 20f,
         SpeedMax = 80f,
-        SpeedMultiplier = 0.005f
+        SpeedMultiplier = 0.005f,
+        RotationMode = ParticleType.RotationModes.Random,
+        SpinMin = 1.5707964f,
+        SpinMax = 4.712389f,
+        SpinFlippedChance = true
     };
     
     private bool grounded;
@@ -166,6 +170,6 @@ public class Demon : Entity {
 
     private void SpawnKillParticles(float angle) {
         level.ParticlesFG.Emit(KILL_PARTICLE_LARGE, 2, Position, 4f * Vector2.One, angle);
-        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 50, Position, 6f * Vector2.One, angle);
+        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 8, Position, 6f * Vector2.One, angle);
     }
 }

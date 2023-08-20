@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using FMOD.Studio;
 using Microsoft.Xna.Framework;
-using Monocle;
 
 namespace Celeste.Mod.HeavenRush; 
 
@@ -25,7 +24,10 @@ public static class Util {
     public static Vector2 PreserveArea(Vector2 vec, float area = 1f) => area / (vec.X * vec.Y) * vec;
 
     public static IEnumerable<Vector2> TemporalLerp(ref float timer, float interval, Vector2 fromPosition, Vector2 toPosition, float deltaTime) {
-        timer += deltaTime;
+        timer = timer % interval + deltaTime;
+
+        if (timer < interval)
+            return new Vector2[0];
 
         var enumerable = Enumerate(timer, interval, fromPosition, toPosition, deltaTime);
 
@@ -34,7 +36,7 @@ public static class Util {
         return enumerable;
         
         IEnumerable<Vector2> Enumerate(float timer, float interval, Vector2 fromPosition, Vector2 toPosition, float deltaTime) {
-            while (timer > interval) {
+            while (timer >= interval) {
                 yield return Vector2.Lerp(toPosition, fromPosition, timer / deltaTime);
 
                 timer -= interval;
