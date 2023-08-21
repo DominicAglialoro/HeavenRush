@@ -23,6 +23,20 @@ public class CardInventoryIndicator : Entity {
         AddTag(Tags.Persistent);
     }
 
+    public override void Added(Scene scene) {
+        base.Added(scene);
+        
+        var player = Scene.Tracker.GetEntity<Player>();
+        
+        if (player == null)
+            return;
+        
+        var cardInventory = player.ExtData().CardInventory;
+        
+        previousCardType = cardInventory.CardType;
+        previousCardCount = cardInventory.CardCount;
+    }
+
     public override void Update() {
         base.Update();
 

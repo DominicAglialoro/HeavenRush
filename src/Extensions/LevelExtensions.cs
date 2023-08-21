@@ -14,9 +14,12 @@ public static class LevelExtensions {
         
         Input.Grab.BufferTime = HeavenRushModule.Session.HeavenRushModeEnabled ? 0.08f : 0f;
 
-        if (level.Tracker.CountEntities<CardInventoryIndicator>() == 0) {
+        if (level.Tracker.CountEntities<AbilityCard>() > 0 && level.Tracker.CountEntities<CardInventoryIndicator>() == 0)
             level.Add(new CardInventoryIndicator());
-            level.Entities.UpdateLists();
-        }
+
+        if (level.Tracker.CountEntities<RushLevelController>() > 0)
+            level.Add(new LevelCompleteUI());
+
+        level.Entities.UpdateLists();
     }
 }

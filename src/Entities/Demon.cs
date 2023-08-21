@@ -52,6 +52,7 @@ public class Demon : Entity {
     private Sprite body;
     private Image outline;
     private Image eyes;
+    private Image feet;
     private SineWave sine;
     private Level level;
     private bool alive = true;
@@ -79,7 +80,7 @@ public class Demon : Entity {
         eyes.CenterOrigin();
 
         if (grounded) {
-            var feet = new Image(GFX.Game["objects/demon/feet"]);
+            feet = new Image(GFX.Game["objects/demon/feet"]);
             
             Add(feet);
             feet.CenterOrigin();
@@ -99,7 +100,7 @@ public class Demon : Entity {
     
     public override void Added(Scene scene) {
         base.Added(scene);
-        level = SceneAs<Level>();
+        level = scene as Level;
     }
 
     public override void Update() {
@@ -111,23 +112,12 @@ public class Demon : Entity {
     }
 
     public void Die(float angle) {
-        alive = false;
-        Visible = false;
-
-        if (!restoresDash)
-            Collidable = false;
-        
+        Die();
         Add(new Coroutine(Util.AfterFrame(() => SpawnKillParticles(angle))));
-        Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
     }
     
     private void Die(Player player) {
-        alive = false;
-        Visible = false;
-
-        if (!restoresDash)
-            Collidable = false;
-        
+        Die();
         Add(new Coroutine(Util.AfterFrame(() => {
             var speed = player.Speed;
 
@@ -139,7 +129,6 @@ public class Demon : Entity {
             else
                 SpawnKillParticles(speed.Angle());
         })));
-        Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
     }
 
     private void OnPlayer(Player player) {
@@ -168,7 +157,28 @@ public class Demon : Entity {
             eyes.Position = eyesOrigin;
     }
 
+    private void Die() {
+        alive = false;
+
+        if (!restoresDash)
+            Collidable = false;
+
+        body.Stop();
+        body.Texture = GFX.Game["objects/demon/shatter"];
+        body.Scale.X = Calc.Random.Choose(-1f, 1f);
+        body.Scale.Y = Calc.Random.Choose(-1f, 1f);
+        outline.Visible = false;
+        eyes.Visible = false;
+
+        if (feet != null)
+            feet.Visible = false;
+
+        Scene.Tracker.GetEntity<RushLevelController>()?.DemonKilled();
+        Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
+    }
+
     private void SpawnKillParticles(float angle) {
+        Visible = false;
         level.ParticlesFG.Emit(KILL_PARTICLE_LARGE, 2, Position, 4f * Vector2.One, angle);
         level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 8, Position, 6f * Vector2.One, angle);
     }

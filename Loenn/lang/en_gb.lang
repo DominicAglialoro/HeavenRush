@@ -9,4 +9,8 @@ entities.heavenRush/surfPlatform.placements.name.platform=Surf Platform
 entities.heavenRush/demon.placements.name.grounded=Demon (Grounded)
 entities.heavenRush/demon.placements.name.aerial=Demon (Aerial)
 
+entities.heavenRush/rushGoal.placements.name.goal=Rush Goal
+
+entities.heavenRush/rushLevelController.placements.name.controller=Rush Level Controller
+
 triggers.heavenRush/heavenRushModeTrigger.placements.name.trigger=Heaven Rush Mode Trigger

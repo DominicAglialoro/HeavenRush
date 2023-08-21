@@ -59,14 +59,18 @@ public static class PlayerExtensions {
         DirectionRange = 0.7f
     };
 
-    private static IDetour Celeste_Player_get_DashAttacking;
-    private static IDetour il_Celeste_Player_orig_Update;
+    private static IDetour On_Celeste_Player_get_CanRetry;
+    private static IDetour On_Celeste_Player_get_DashAttacking;
+    private static IDetour IL_Celeste_Player_orig_Added;
+    private static IDetour IL_Celeste_Player_orig_Update;
     
     public static void Load() {
         On.Celeste.Player.ctor += Player_ctor;
-        Celeste_Player_get_DashAttacking = new Hook(typeof(Player).GetPropertyUnconstrained("DashAttacking").GetGetMethod(), Player_get_DashAttacking);
+        On_Celeste_Player_get_CanRetry =new Hook(typeof(Player).GetPropertyUnconstrained("CanRetry").GetGetMethod(), Player_get_CanRetry);
+        On_Celeste_Player_get_DashAttacking = new Hook(typeof(Player).GetPropertyUnconstrained("DashAttacking").GetGetMethod(), Player_get_DashAttacking);
+        IL_Celeste_Player_orig_Added = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Added"), Player_orig_Added_il);
         On.Celeste.Player.Update += Player_Update;
-        il_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
+        IL_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
         IL.Celeste.Player.OnCollideH += Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV += Player_OnCollideV_il;
         IL.Celeste.Player.BeforeDownTransition += Player_BeforeDownTransition_il;
@@ -75,14 +79,17 @@ public static class PlayerExtensions {
         On.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
+        On.Celeste.Player.IntroRespawnEnd += Player_IntroRespawnEnd;
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
     }
 
     public static void Unload() {
         On.Celeste.Player.ctor -= Player_ctor;
-        Celeste_Player_get_DashAttacking.Dispose();
+        On_Celeste_Player_get_CanRetry.Dispose();
+        On_Celeste_Player_get_DashAttacking.Dispose();
+        IL_Celeste_Player_orig_Added.Dispose();
         On.Celeste.Player.Update -= Player_Update;
-        il_Celeste_Player_orig_Update.Dispose();
+        IL_Celeste_Player_orig_Update.Dispose();
         IL.Celeste.Player.OnCollideH -= Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV -= Player_OnCollideV_il;
         IL.Celeste.Player.BeforeDownTransition -= Player_BeforeDownTransition_il;
@@ -91,10 +98,17 @@ public static class PlayerExtensions {
         On.Celeste.Player.NormalUpdate -= Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin -= Player_DashBegin;
+        On.Celeste.Player.IntroRespawnEnd -= Player_IntroRespawnEnd;
         On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
     }
 
     public static Data ExtData(this Player player) => DynamicData.For(player).Get<Data>("heavenRushData");
+
+    public static void Spawn(this Player player) {
+        player.Active = true;
+        player.Visible = true;
+        player.StateMachine.State = 14;
+    }
 
     public static bool HitDemon(this Player player) {
         player.GetData(out var dynamicData, out var extData);
@@ -151,11 +165,9 @@ public static class PlayerExtensions {
     }
 
     private static int UseYellowCard(this Player player) {
-        var dynamicData = DynamicData.For(player);
-        
         Audio.Play(SFX.game_gen_thing_booped, player.Position);
         Celeste.Freeze(0.033f);
-        dynamicData.Get<Level>("level").Add(Engine.Pooler.Create<SpeedRing>().Init(player.Center, MathHelper.PiOver2, Color.White));
+        player.Scene.Add(Engine.Pooler.Create<SpeedRing>().Init(player.Center, MathHelper.PiOver2, Color.White));
         player.ResetStateValues();
         player.Sprite.Scale = new Vector2(0.4f, 1.8f);
 
@@ -518,8 +530,23 @@ public static class PlayerExtensions {
         Audio.Play(SFX.char_bad_dreamblock_exit);
         Audio.Play(SFX.game_05_redbooster_end);
     }
+
+    private static bool InterceptRespawn(Player player) {
+        var levelController = player.Scene.Tracker.GetEntity<RushLevelController>();
+
+        if (levelController == null)
+            return false;
+        
+        player.Active = false;
+        player.Visible = false;
+        
+        return true;
+    }
     
     private static void BeforeBaseUpdate(Player player) {
+        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
+            return;
+        
         player.GetData(out var dynamicData, out var extData);
 
         bool groundBoost = (extData.RedBoostTimer > 0f || extData.GroundBoostSources > 0) && player.Speed.Y >= 0f && dynamicData.Get<bool>("onGround");
@@ -649,13 +676,15 @@ public static class PlayerExtensions {
         player.Add(extData.WhiteDashSoundSource = new SoundSource());
 
         var stateMachine = player.StateMachine;
-        
+
         extData.BlueDashIndex = stateMachine.AddState(null, player.BlueDashCoroutine, null, player.BlueDashEnd);
         extData.GreenDiveIndex = stateMachine.AddState(player.GreenDiveUpdate);
         extData.RedBoostDashIndex = stateMachine.AddState(null, player.RedBoostDashCoroutine);
         extData.WhiteDashIndex = stateMachine.AddState(null, player.WhiteDashCoroutine, null, player.WhiteDashEnd);
     }
-    
+
+    private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) => player.Active && canRetry(player);
+
     private static bool Player_get_DashAttacking(Func<Player, bool> dashAttacking, Player player) {
         if (dashAttacking(player))
             return true;
@@ -668,6 +697,29 @@ public static class PlayerExtensions {
         int state = player.StateMachine.State;
 
         return state == extData.BlueDashIndex || state == extData.RedBoostDashIndex;
+    }
+    
+    private static void Player_orig_Added_il(ILContext il) {
+        var cursor = new ILCursor(il);
+
+        cursor.GotoNext(MoveType.Before,
+            instr => instr.OpCode == OpCodes.Ldarg_0,
+            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdcI4(14),
+            instr => instr.MatchCallvirt<StateMachine>("set_State"));
+
+        int index = cursor.Index;
+
+        cursor.GotoNext(instr => instr.OpCode == OpCodes.Br);
+
+        var label = (ILLabel) cursor.Next.Operand;
+
+        cursor.Index = index;
+        cursor.MoveAfterLabels();
+
+        cursor.Emit(OpCodes.Ldarg_0);
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(InterceptRespawn)));
+        cursor.Emit(OpCodes.Brtrue, label);
     }
     
     private static void Player_Update(On.Celeste.Player.orig_Update update, Player player) {
@@ -934,16 +986,19 @@ public static class PlayerExtensions {
     }
 
     private static void Player_DashBegin(On.Celeste.Player.orig_DashBegin dashBegin, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
-            dashBegin(player);
-            
-            return;
-        }
+        dashBegin(player);
         
+        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
+            return;
+
         player.GetData(out _, out var extData);
         extData.BlueDashHyperGraceTimer = 0f;
         extData.WhiteDashSuperGraceTimer = 0f;
-        dashBegin(player);
+    }
+    
+    private static void Player_IntroRespawnEnd(On.Celeste.Player.orig_IntroRespawnEnd introRespawnEnd, Player player) {
+        introRespawnEnd(player);
+        player.Scene.Tracker.GetEntity<RushLevelController>()?.RespawnCompleted();
     }
 
     private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite updateSprite, Player player) {
@@ -968,7 +1023,7 @@ public static class PlayerExtensions {
         public int GreenDiveIndex;
         public int RedBoostDashIndex;
         public int WhiteDashIndex;
-        public readonly CardInventory CardInventory = new();
+        public CardInventory CardInventory = new();
         public float UseCardCooldown;
         public bool BlueDash;
         public bool KilledInBlueDash;
