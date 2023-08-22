@@ -15,7 +15,7 @@ public static class PlayerExtensions {
     private const float YELLOW_BOUNCE_ADD_X = 40f;
     private const float YELLOW_BOUNCE_MIN_Y = -315f;
     private const float YELLOW_BOUNCE_ADD_Y = -105f;
-    private const float BLUE_DASH_SPEED = 960f;
+    private const float BLUE_DASH_SPEED = 1080f;
     private const float BLUE_DASH_END_SPEED = 240f;
     private const float BLUE_DASH_DURATION = 0.1f;
     private const float BLUE_DASH_ALLOW_JUMP_AT = 0.066f;
@@ -25,13 +25,14 @@ public static class PlayerExtensions {
     private const float GREEN_DIVE_LAND_KILL_RADIUS = 48f;
     private static readonly Vector2 RED_BOOST_DASH_SPEED = new(280f, 240f);
     private const float RED_BOOST_DASH_DURATION = 0.15f;
-    private const float RED_BOOST_DURATION = 0.8f;
-    private const float RED_BOOST_AIR_FRICTION = 0.325f;
+    private const float RED_BOOST_DURATION = 1f;
+    private const float RED_BOOST_AIR_FRICTION = 0.4f;
+    private const float RED_BOOST_STORED_SPEED_DURATION = 0.083f;
     private const float WHITE_DASH_SPEED = 325f;
     private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
     private const float WHITE_DASH_SUPER_GRACE_PERIOD = 0.083f;
     private const float GROUND_BOOST_FRICTION = 0.1f;
-    private const float GROUND_BOOST_SPEED = 240f;
+    private const float GROUND_BOOST_SPEED = 280f;
     private const float GROUND_BOOST_ACCELERATION = 650f;
 
     private static readonly ParticleType RED_BOOST_PARTICLE = new() {
@@ -62,7 +63,6 @@ public static class PlayerExtensions {
     private static IDetour On_Celeste_Player_get_CanRetry;
     private static IDetour On_Celeste_Player_get_DashAttacking;
     private static IDetour IL_Celeste_Player_orig_Added;
-    private static IDetour IL_Celeste_Player_orig_Update;
     
     public static void Load() {
         On.Celeste.Player.ctor += Player_ctor;
@@ -70,12 +70,12 @@ public static class PlayerExtensions {
         On_Celeste_Player_get_DashAttacking = new Hook(typeof(Player).GetPropertyUnconstrained("DashAttacking").GetGetMethod(), Player_get_DashAttacking);
         IL_Celeste_Player_orig_Added = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Added"), Player_orig_Added_il);
         On.Celeste.Player.Update += Player_Update;
-        IL_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
         IL.Celeste.Player.OnCollideH += Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV += Player_OnCollideV_il;
         IL.Celeste.Player.BeforeDownTransition += Player_BeforeDownTransition_il;
         IL.Celeste.Player.BeforeUpTransition += Player_BeforeUpTransition_il;
         On.Celeste.Player.Jump += Player_Jump;
+        On.Celeste.Player.WallJump += Player_WallJump;
         On.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
@@ -89,12 +89,12 @@ public static class PlayerExtensions {
         On_Celeste_Player_get_DashAttacking.Dispose();
         IL_Celeste_Player_orig_Added.Dispose();
         On.Celeste.Player.Update -= Player_Update;
-        IL_Celeste_Player_orig_Update.Dispose();
         IL.Celeste.Player.OnCollideH -= Player_OnCollideH_il;
         IL.Celeste.Player.OnCollideV -= Player_OnCollideV_il;
         IL.Celeste.Player.BeforeDownTransition -= Player_BeforeDownTransition_il;
         IL.Celeste.Player.BeforeUpTransition -= Player_BeforeUpTransition_il;
         On.Celeste.Player.Jump -= Player_Jump;
+        On.Celeste.Player.WallJump -= Player_WallJump;
         On.Celeste.Player.NormalUpdate -= Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin -= Player_DashBegin;
@@ -108,6 +108,19 @@ public static class PlayerExtensions {
         player.Active = true;
         player.Visible = true;
         player.StateMachine.State = 14;
+    }
+
+    public static void SetSurfSource(this Player player, bool active) {
+        player.GetData(out _, out var extData);
+
+        if (active) {
+            if (extData.SurfSources == 0)
+                Audio.Play(SFX.char_mad_water_in);
+
+            extData.SurfSources++;
+        }
+        else
+            extData.SurfSources--;
     }
 
     public static bool HitDemon(this Player player) {
@@ -175,7 +188,7 @@ public static class PlayerExtensions {
         
         player.Speed = Vector2.Zero;
 
-        player.Add(new Coroutine(Util.AfterFrame(() => {
+        player.Add(new Coroutine(Util.NextFrame(() => {
             int moveX = Input.MoveX.Value;
             float newSpeedX = previousSpeed.X + moveX * YELLOW_BOUNCE_ADD_X;
 
@@ -417,13 +430,27 @@ public static class PlayerExtensions {
         player.Speed = newSpeed;
 
         for (float timer = 0f; timer < RED_BOOST_DASH_DURATION; timer += Engine.DeltaTime) {
-            player.UpdateTrail(Color.Red, 0.016f, 0.5f);
-            
-            if (Input.Jump.Pressed && dynamicData.Get<float>("jumpGraceTimer") > 0f) {
-                player.Jump();
-                player.StateMachine.State = 0;
+            if (Input.Jump.Pressed) {
+                if (player.DashDir.Y >= 0f && dynamicData.Get<float>("jumpGraceTimer") > 0f) {
+                    player.Jump();
+                    player.StateMachine.State = 0;
+                    
+                    yield break;
+                }
+
+                if (dynamicData.Invoke<bool>("WallJumpCheck", 1)) {
+                    dynamicData.Invoke("WallJump", -1);
+                    player.StateMachine.State = 0;
+                    
+                    yield break;
+                }
                 
-                yield break;
+                if (dynamicData.Invoke<bool>("WallJumpCheck", -1)) {
+                    dynamicData.Invoke("WallJump", 1);
+                    player.StateMachine.State = 0;
+                    
+                    yield break;
+                }
             }
 
             if (player.DashDir.Y == 0f) {
@@ -542,23 +569,6 @@ public static class PlayerExtensions {
         
         return true;
     }
-    
-    private static void BeforeBaseUpdate(Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
-        
-        player.GetData(out var dynamicData, out var extData);
-
-        bool groundBoost = (extData.RedBoostTimer > 0f || extData.GroundBoostSources > 0) && player.Speed.Y >= 0f && dynamicData.Get<bool>("onGround");
-        
-        if (extData.GroundBoost == groundBoost)
-            return;
-
-        extData.GroundBoost = groundBoost;
-        
-        if (groundBoost)
-            Audio.Play(SFX.char_mad_water_in);
-    }
 
     private static void OnTrueCollideH(Player player) {
         if (!HeavenRushModule.Session.HeavenRushModeEnabled)
@@ -568,6 +578,11 @@ public static class PlayerExtensions {
         
         if (player.StateMachine.State == extData.WhiteDashIndex)
             player.StateMachine.State = 0;
+
+        if (extData.RedBoostTimer > 0f) {
+            extData.RedBoostStoredSpeed = -player.Speed.X;
+            extData.RedBoostStoredSpeedTimer = RED_BOOST_STORED_SPEED_DURATION;
+        }
     }
 
     private static void OnTrueCollideV(Player player) {
@@ -592,26 +607,24 @@ public static class PlayerExtensions {
             level.Particles.Emit(Player.P_SummitLandB, 8, player.BottomCenter + Vector2.UnitX * 2f, Vector2.UnitX * 2f, -0.2617994f);
             level.Displacement.AddBurst(player.Center, 0.4f, 16f, 128f, 1f, Ease.QuadOut, Ease.QuadOut);
 
-            bool anyKilled = false;
+            int killedCount = 0;
             
             foreach (var entity in player.Scene.Tracker.GetEntities<Demon>()) {
                 if (Vector2.DistanceSquared(player.Position, entity.Position) > GREEN_DIVE_LAND_KILL_RADIUS * GREEN_DIVE_LAND_KILL_RADIUS)
                     continue;
                 
                 ((Demon) entity).Die((entity.Position - player.Position).Angle());
-                anyKilled = true;
+                killedCount++;
             }
 
-            if (anyKilled) {
+            if (killedCount > 0) {
                 player.RefillDash();
                 Audio.Play(SFX.game_09_iceball_break, player.Position);
+                player.Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
             }
         }
         else if (state == extData.WhiteDashIndex)
             player.StateMachine.State = 0;
-        
-        if ((extData.RedBoostTimer > 0f || extData.GroundBoostSources > 0f) && player.OnGround())
-            Util.PlaySound(SFX.char_mad_water_in, 2f);
     }
 
     private static bool IsInTransitionableState(Player player) {
@@ -661,7 +674,7 @@ public static class PlayerExtensions {
         
         player.GetData(out _, out var extData);
 
-        return extData.GroundBoost ? GROUND_BOOST_FRICTION : defaultMultiplier;
+        return (extData.RedBoostTimer > 0f || extData.SurfSources > 0) ? GROUND_BOOST_FRICTION : defaultMultiplier;
     }
 
     private static void Player_ctor(On.Celeste.Player.orig_ctor ctor, Player player, Vector2 position, PlayerSpriteMode spritemode) {
@@ -742,12 +755,13 @@ public static class PlayerExtensions {
 
         extData.RedBoostTimer -= Engine.DeltaTime;
         
-        if (extData.RedBoostTimer <= 0f) {
+        if (extData.RedBoostTimer < 0f)
             extData.RedBoostTimer = 0f;
 
-            if (extData.RedBoostSoundSource.Playing)
-                extData.RedBoostSoundSource.Stop();
-        }
+        extData.RedBoostStoredSpeedTimer -= Engine.DeltaTime;
+        
+        if (extData.RedBoostStoredSpeedTimer < 0f)
+            extData.RedBoostStoredSpeedTimer = 0f;
 
         extData.WhiteDashSuperGraceTimer -= Engine.DeltaTime;
 
@@ -755,10 +769,10 @@ public static class PlayerExtensions {
             extData.WhiteDashSuperGraceTimer = 0f;
 
         update(player);
-        
+
         var level = dynamicData.Get<Level>("level");
 
-        if (extData.GroundBoostSources > 0f && dynamicData.Get<bool>("onGround") && Math.Abs(player.Speed.X) > 64f) {
+        if (extData.SurfSources > 0 && dynamicData.Get<bool>("onGround") && Math.Abs(player.Speed.X) > 64f) {
             float interval = 0.008f / Math.Min(Math.Abs(player.Speed.X) / GROUND_BOOST_SPEED, 1f);
             var offset = -4f * Math.Sign(player.Speed.X) * Vector2.UnitX;
             float angle = player.Speed.X > 0f ? MathHelper.Pi + 0.4f : -0.4f;
@@ -768,7 +782,12 @@ public static class PlayerExtensions {
         }
         else
             extData.SurfParticleTimer = 0f;
-
+        
+        if (extData.RedBoostTimer > 0f)
+            player.UpdateTrail(Color.Red * Math.Min(4f * extData.RedBoostTimer, 1f), 0.016f, 0.16f);
+        else if (extData.RedBoostSoundSource.Playing)
+            extData.RedBoostSoundSource.Stop();
+        
         if (extData.RedBoostTimer > 0f && player.Speed.Length() > 64f) {
             float interval = 0.008f / Math.Min(Math.Abs(player.Speed.Length()) / RED_BOOST_DASH_SPEED.X, 1f);
             var offset = -6f * Vector2.UnitY;
@@ -778,17 +797,9 @@ public static class PlayerExtensions {
         }
         else
             extData.RedBoostParticleTimer = 0f;
-    }
-    
-    private static void Player_orig_Update_il(ILContext il) {
-        var cursor = new ILCursor(il);
-
-        cursor.GotoNext(MoveType.AfterLabel,
-            instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchCall<Actor>("Update"));
-
-        cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(BeforeBaseUpdate)));
+        
+        if (extData.RedBoostStoredSpeedTimer == 0f)
+            extData.RedBoostStoredSpeed = 0f;
     }
 
     private static void Player_OnCollideH_il(ILContext il) {
@@ -808,10 +819,9 @@ public static class PlayerExtensions {
         cursor.Emit(OpCodes.Brtrue_S, branch);
         
         cursor.Index = -1;
-        cursor.GotoPrev(MoveType.After,
-            instr => instr.OpCode == OpCodes.Ldarg_0,
+        cursor.GotoPrev(MoveType.AfterLabel,
             instr => instr.MatchLdcR4(0f),
-            instr => instr.MatchStfld<Player>("gliderBoostTimer"));
+            instr => instr.MatchStfld<Vector2>("X"));
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(OnTrueCollideH)));
@@ -840,9 +850,7 @@ public static class PlayerExtensions {
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(GetUltraBoostSpeed)));
 
         cursor.Index = -1;
-        cursor.GotoPrev(MoveType.After,
-            instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdflda<Player>("Speed"),
+        cursor.GotoPrev(MoveType.Before,
             instr => instr.MatchLdcR4(0f),
             instr => instr.MatchStfld<Vector2>("Y"));
 
@@ -926,24 +934,38 @@ public static class PlayerExtensions {
             return;
         }
         
-        if (extData.GroundBoost)
+        if (extData.SurfSources > 0)
             Util.PlaySound(SFX.char_mad_water_out, 2f);
             
         jump(player, particles, playsfx);
+    }
+
+    private static void Player_WallJump(On.Celeste.Player.orig_WallJump wallJump, Player player, int dir) {
+        float beforeSpeed = Math.Abs(player.Speed.X);
+        
+        wallJump(player, dir);
+        player.GetData(out _, out var extData);
+
+        float newSpeed = Math.Abs(player.Speed.X);
+
+        if (extData.RedBoostTimer > 0f && beforeSpeed > newSpeed)
+            newSpeed = beforeSpeed;
+
+        if (extData.RedBoostStoredSpeedTimer > 0f && dir * extData.RedBoostStoredSpeed > newSpeed)
+            newSpeed = dir * extData.RedBoostStoredSpeed;
+
+        player.Speed.X = dir * newSpeed;
     }
     
     private static int Player_NormalUpdate(On.Celeste.Player.orig_NormalUpdate normalUpdate, Player player) {
         if (!HeavenRushModule.Session.HeavenRushModeEnabled)
             return normalUpdate(player);
 
-        player.GetData(out _, out var extData);
-        
-        if (extData.RedBoostTimer > 0f)
-            player.UpdateTrail(Color.Red * Math.Min(4f * extData.RedBoostTimer, 1f), 0.016f, 0.16f);
-        
+        player.GetData(out var dynamicData, out var extData);
+
         int moveX = Input.MoveX.Value;
         
-        if (extData.GroundBoost && !player.Ducking && moveX * player.Speed.X < GROUND_BOOST_SPEED)
+        if ((extData.RedBoostTimer > 0f || extData.SurfSources > 0) && dynamicData.Get<bool>("onGround") && !player.Ducking && moveX * player.Speed.X < GROUND_BOOST_SPEED)
             player.Speed.X = Calc.Approach(player.Speed.X, moveX * GROUND_BOOST_SPEED, Engine.DeltaTime * GROUND_BOOST_ACCELERATION);
 
         return normalUpdate(player);
@@ -1029,13 +1051,14 @@ public static class PlayerExtensions {
         public bool KilledInBlueDash;
         public float BlueDashHyperGraceTimer;
         public float RedBoostTimer;
+        public float RedBoostStoredSpeed;
+        public float RedBoostStoredSpeedTimer;
         public float RedBoostParticleTimer;
         public SoundSource RedBoostSoundSource;
         public float WhiteDashSuperGraceTimer;
         public SoundSource WhiteDashSoundSource;
         public float CustomTrailTimer;
-        public bool GroundBoost;
-        public int GroundBoostSources;
+        public int SurfSources;
         public float SurfParticleTimer;
     }
 }

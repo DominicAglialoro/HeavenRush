@@ -9,7 +9,6 @@ namespace Celeste.Mod.HeavenRush;
 public class RushLevelController : Entity {
     private StateMachine stateMachine;
     private int demonCount;
-    private bool killLastFrame;
     private long startedAtTime;
     private Level level;
 
@@ -29,15 +28,18 @@ public class RushLevelController : Entity {
 
     public void RespawnCompleted() => startedAtTime = level.Session.Time;
 
-    public void DemonKilled() {
+    public void DemonsKilled(int count) {
         if (demonCount == 0)
             return;
 
-        demonCount--;
-        killLastFrame = true;
-        
-        if (demonCount == 0)
+        demonCount -= count;
+
+        if (demonCount == 0) {
+            Util.PlaySound("event:/classic/sfx13", 2f);
             Scene.Tracker.GetEntity<RushGoal>()?.Open();
+        }
+        else
+            Util.PlaySound("event:/classic/sfx8", 2f);
     }
 
     public void GoalReached() {
@@ -63,23 +65,14 @@ public class RushLevelController : Entity {
         return 1;
     }
 
-    private int GameplayUpdate() {
-        if (!killLastFrame)
-            return 1;
-        
-        if (demonCount == 0)
-            Util.PlaySound("event:/classic/sfx13", 2f);
-        else
-            Util.PlaySound("event:/classic/sfx8", 2f);
-
-        killLastFrame = false;
-
-        return 1;
-    }
+    private int GameplayUpdate() => 1;
 
     private int CompleteUpdate() {
         if (Input.MenuConfirm.Pressed) {
             level.DoScreenWipe(false, () => {
+                foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+                    player.RemoveSelf();
+                
                 var session = level.Session;
                 var levels = session.MapData.Levels;
                 int index = levels.IndexOf(session.LevelData) + 1;
@@ -89,24 +82,21 @@ public class RushLevelController : Entity {
                     
                     return;
                 }
-                
-                var player = Scene.Tracker.GetEntity<Player>();
 
-                if (player != null) {
-                    Leader.StoreStrawberries(player.Leader);
-                    level.Remove(player);
-                }
-                
                 level.UnloadLevel();
-                session.Keys.Clear();
                 session.Level = levels[index].Name;
                 session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
                 level.LoadLevel(Player.IntroTypes.Respawn);
-                Leader.RestoreStrawberries(level.Tracker.GetEntity<Player>().Leader);
             });
         }
-        else if (Input.MenuCancel.Pressed)
-            level.DoScreenWipe(false, level.Reload);
+        else if (Input.MenuCancel.Pressed) {
+            level.DoScreenWipe(false, () => {
+                foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+                    player.RemoveSelf();
+                
+                level.Reload();
+            });
+        }
         else
             return 2;
 

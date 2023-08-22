@@ -8,27 +8,13 @@ namespace Celeste.Mod.HeavenRush;
 public class Demon : Entity {
     private const float REMOVE_AFTER_KILL_TIME = 0.033f;
 
-    private ParticleType KILL_PARTICLE_LARGE = new() {
-        Source = GFX.Game["particles/triangle"],
-        Color = Color.White,
-        Color2 = Color.Black,
-        ColorMode = ParticleType.ColorModes.Fade,
-        FadeMode = ParticleType.FadeModes.Late,
-        LifeMin = 0.5f,
-        LifeMax = 0.8f,
-        Size = 2f,
-        Direction = 0f,
-        DirectionRange = 0.78f,
-        SpeedMin = 140f,
-        SpeedMax = 210f,
-        SpeedMultiplier = 0.005f,
-        RotationMode = ParticleType.RotationModes.Random,
-        SpinMin = 1.5707964f,
-        SpinMax = 4.712389f,
-        SpinFlippedChance = true
+    private static readonly ParticleBurst[] KILL_PARTICLES_LARGE = {
+        CreateKillParticleLarge(0, new Vector2(-4f, 0f)),
+        CreateKillParticleLarge(1, new Vector2(1f, 4f)),
+        CreateKillParticleLarge(2, new Vector2(2f, 2f))
     };
     
-    private ParticleType KILL_PARTICLE_SMALL = new() {
+    private static readonly ParticleBurst KILL_PARTICLE_SMALL = new(new ParticleType {
         Source = GFX.Game["particles/triangle"],
         Color = Color.White,
         Color2 = Color.Black,
@@ -36,7 +22,7 @@ public class Demon : Entity {
         FadeMode = ParticleType.FadeModes.Late,
         LifeMin = 0.2f,
         LifeMax = 0.3f,
-        Size = 0.5f,
+        Size = 1f,
         DirectionRange = 0.78f,
         SpeedMin = 20f,
         SpeedMax = 80f,
@@ -45,7 +31,28 @@ public class Demon : Entity {
         SpinMin = 1.5707964f,
         SpinMax = 4.712389f,
         SpinFlippedChance = true
+    }) {
+        Amount = 8,
+        Range = 6f * Vector2.One
     };
+
+    private static ParticleBurst CreateKillParticleLarge(int index, Vector2 offset) => new(new ParticleType {
+        Source = GFX.Game[$"particles/demonShatter/shatter{index}"],
+        Color = Color.White,
+        Color2 = Color.Black,
+        ColorMode = ParticleType.ColorModes.Fade,
+        FadeMode = ParticleType.FadeModes.Late,
+        LifeMin = 0.5f,
+        LifeMax = 0.8f,
+        Size = 1f,
+        DirectionRange = 0.78f,
+        SpeedMin = 140f,
+        SpeedMax = 210f,
+        SpeedMultiplier = 0.005f,
+        SpinMin = 1.5707964f,
+        SpinMax = 4.712389f,
+        SpinFlippedChance = true
+    }) { Offset = offset };
     
     private bool grounded;
     private bool restoresDash;
@@ -136,6 +143,7 @@ public class Demon : Entity {
             Celeste.Freeze(0.016f);
             Audio.Play(SFX.game_09_iceball_break, Position);
             Die(player);
+            Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(1);
         }
         
         if (restoresDash && !alive && player.RefillDash())
@@ -165,21 +173,19 @@ public class Demon : Entity {
 
         body.Stop();
         body.Texture = GFX.Game["objects/demon/shatter"];
-        body.Scale.X = Calc.Random.Choose(-1f, 1f);
-        body.Scale.Y = Calc.Random.Choose(-1f, 1f);
         outline.Visible = false;
-        eyes.Visible = false;
 
         if (feet != null)
             feet.Visible = false;
 
-        Scene.Tracker.GetEntity<RushLevelController>()?.DemonKilled();
         Add(new Coroutine(Util.AfterTime(REMOVE_AFTER_KILL_TIME, RemoveSelf)));
     }
 
     private void SpawnKillParticles(float angle) {
         Visible = false;
-        level.ParticlesFG.Emit(KILL_PARTICLE_LARGE, 2, Position, 4f * Vector2.One, angle);
-        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, 8, Position, 6f * Vector2.One, angle);
+        level.ParticlesFG.Emit(KILL_PARTICLES_LARGE[0], Position, angle);
+        level.ParticlesFG.Emit(KILL_PARTICLES_LARGE[1], Position, angle);
+        level.ParticlesFG.Emit(KILL_PARTICLES_LARGE[2], Position, angle);
+        level.ParticlesFG.Emit(KILL_PARTICLE_SMALL, Position, angle);
     }
 }

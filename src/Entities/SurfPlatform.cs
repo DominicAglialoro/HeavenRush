@@ -31,13 +31,9 @@ public class SurfPlatform : Solid {
 
         if (player == lastPlayer)
             return;
-        
-        if (lastPlayer != null)
-            lastPlayer.ExtData().GroundBoostSources--;
 
-        if (player != null)
-            player.ExtData().GroundBoostSources++;
-            
+        lastPlayer?.SetSurfSource(false);
+        player?.SetSurfSource(true);
         lastPlayer = player;
     }
 }

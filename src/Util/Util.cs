@@ -44,9 +44,15 @@ public static class Util {
         }
     }
 
+    public static IEnumerator NextFrame(Action action) {
+        action();
+        
+        yield break;
+    }
+
     public static IEnumerator AfterFrame(Action action) {
         yield return null;
-
+        
         action();
     }
 

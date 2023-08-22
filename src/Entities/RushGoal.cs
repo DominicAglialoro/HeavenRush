@@ -11,7 +11,6 @@ public class RushGoal : Entity {
     private Sprite crystal;
     private Sprite effect;
     private SineWave sine;
-    private bool open;
     
     public RushGoal(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(16f, 24f, -8f, -24f);
@@ -32,8 +31,8 @@ public class RushGoal : Entity {
         crystal.CenterOrigin();
         
         Add(effect = new Sprite(GFX.Game, "objects/rushGoal/effect"));
-        effect.Add("effect", "", 0.1f);
-        effect.OnFinish = _ => effect.Visible = false;
+        effect.AddLoop("effect", "", 0.1f);
+        effect.Play("effect");
         effect.Color = (Color.White * 0.5f) with { A = 0 };
         effect.JustifyOrigin(0.5f, 1f);
         effect.Visible = false;
@@ -49,17 +48,12 @@ public class RushGoal : Entity {
     public override void Update() {
         base.Update();
         crystal.Y = -12f + sine.Value;
-        
-        if (open && Scene.OnInterval(2f)) {
-            effect.Visible = true;
-            effect.Play("effect", true);
-        }
     }
 
     public void Open() {
-        open = true;
         Collidable = true;
         back.Visible = true;
+        effect.Visible = true;
     }
 
     private void OnPlayer(Player player) {
