@@ -27,6 +27,9 @@ public class LevelCompleteUI : Entity {
     public override void Update() {
         base.Update();
         anim += Engine.DeltaTime;
+
+        if (anim > ANIM_DURATION)
+            anim = ANIM_DURATION;
     }
 
     public override void Render() {

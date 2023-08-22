@@ -7,8 +7,11 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/rushLevelController"), Tracked]
 public class RushLevelController : Entity {
+    public int DemonCount { get; private set; }
+
+    public event Action DemonKilled;
+    
     private StateMachine stateMachine;
-    private int demonCount;
     private long startedAtTime;
     private Level level;
 
@@ -22,24 +25,26 @@ public class RushLevelController : Entity {
 
         Tag = Tags.FrozenUpdate;
         
-        demonCount = scene.Tracker.CountEntities<Demon>();
+        DemonCount = scene.Tracker.CountEntities<Demon>();
         level = scene as Level;
     }
 
     public void RespawnCompleted() => startedAtTime = level.Session.Time;
 
     public void DemonsKilled(int count) {
-        if (demonCount == 0)
+        if (DemonCount == 0)
             return;
 
-        demonCount -= count;
+        DemonCount -= count;
 
-        if (demonCount == 0) {
+        if (DemonCount == 0) {
             Util.PlaySound("event:/classic/sfx13", 2f);
             Scene.Tracker.GetEntity<RushGoal>()?.Open();
         }
         else
             Util.PlaySound("event:/classic/sfx8", 2f);
+        
+        DemonKilled?.Invoke();
     }
 
     public void GoalReached() {

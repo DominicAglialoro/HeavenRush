@@ -21,7 +21,7 @@ public class RushGoal : Entity {
         outline.JustifyOrigin(0.5f, 1f);
         
         Add(back = new Image(GFX.Game["objects/rushGoal/back"]));
-        back.Color = (Color.White * 0.5f) with { A = 0 };
+        back.Color = (Color.White * 0.25f) with { A = 0 };
         back.JustifyOrigin(0.5f, 1f);
         back.Visible = false;
 

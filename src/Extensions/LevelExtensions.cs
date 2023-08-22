@@ -17,8 +17,10 @@ public static class LevelExtensions {
         if (level.Tracker.CountEntities<AbilityCard>() > 0 && level.Tracker.CountEntities<CardInventoryIndicator>() == 0)
             level.Add(new CardInventoryIndicator());
 
-        if (level.Tracker.CountEntities<RushLevelController>() > 0)
+        if (level.Tracker.CountEntities<RushLevelController>() > 0) {
+            level.Add(new DemonCounter());
             level.Add(new LevelCompleteUI());
+        }
 
         level.Entities.UpdateLists();
     }
