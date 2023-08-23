@@ -10,7 +10,7 @@ using MonoMod.Utils;
 namespace Celeste.Mod.HeavenRush;
 
 public static class PlayerExtensions {
-    private const float MAX_USE_CARD_COOLDOWN = 0.1f;
+    private const float USE_CARD_COOLDOWN = 0.1f;
     private const float YELLOW_BOUNCE_MIN_X = 80f;
     private const float YELLOW_BOUNCE_ADD_X = 40f;
     private const float YELLOW_BOUNCE_MIN_Y = -315f;
@@ -61,18 +61,18 @@ public static class PlayerExtensions {
     };
 
     private static IDetour On_Celeste_Player_get_CanRetry;
-    private static IDetour On_Celeste_Player_get_DashAttacking;
     private static IDetour IL_Celeste_Player_orig_Added;
     private static IDetour IL_Celeste_Player_orig_Update;
     
     public static void Load() {
         On.Celeste.Player.ctor += Player_ctor;
         On_Celeste_Player_get_CanRetry =new Hook(typeof(Player).GetPropertyUnconstrained("CanRetry").GetGetMethod(), Player_get_CanRetry);
-        On_Celeste_Player_get_DashAttacking = new Hook(typeof(Player).GetPropertyUnconstrained("DashAttacking").GetGetMethod(), Player_get_DashAttacking);
         IL_Celeste_Player_orig_Added = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Added"), Player_orig_Added_il);
         On.Celeste.Player.Update += Player_Update;
         IL_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
+        On.Celeste.Player.OnCollideH += Player_OnCollideH;
         IL.Celeste.Player.OnCollideH += Player_OnCollideH_il;
+        On.Celeste.Player.OnCollideV += Player_OnCollideV;
         IL.Celeste.Player.OnCollideV += Player_OnCollideV_il;
         IL.Celeste.Player.BeforeDownTransition += Player_BeforeDownTransition_il;
         IL.Celeste.Player.BeforeUpTransition += Player_BeforeUpTransition_il;
@@ -87,7 +87,6 @@ public static class PlayerExtensions {
     public static void Unload() {
         On.Celeste.Player.ctor -= Player_ctor;
         On_Celeste_Player_get_CanRetry.Dispose();
-        On_Celeste_Player_get_DashAttacking.Dispose();
         IL_Celeste_Player_orig_Added.Dispose();
         On.Celeste.Player.Update -= Player_Update;
         IL_Celeste_Player_orig_Update.Dispose();
@@ -116,7 +115,7 @@ public static class PlayerExtensions {
 
         int state = player.StateMachine.State;
         
-        if (!player.DashAttacking && extData.RedBoostTimer == 0f && state != extData.WhiteDashIndex)
+        if (!player.DashAttacking && extData.RedBoostTimer == 0f && state != extData.BlueDashIndex && state != extData.WhiteDashIndex)
             return false;
 
         if (state == extData.BlueDashIndex)
@@ -139,29 +138,8 @@ public static class PlayerExtensions {
             return false;
 
         player.GetData(out _, out var extData);
-        
-        var cardInventory = extData.CardInventory;
 
-        return cardInventory.CardCount > 0 && (player.StateMachine.State != 2 || cardInventory.CardType == AbilityCardType.Yellow); 
-    }
-
-    private static int UseCard(this Player player) {
-        player.GetData(out _, out var extData);
-        
-        var cardInventory = extData.CardInventory;
-        
-        Input.Grab.ConsumeBuffer();
-        cardInventory.PopCard();
-        extData.UseCardCooldown = MAX_USE_CARD_COOLDOWN;
-
-        return cardInventory.CardType switch {
-            AbilityCardType.Yellow => player.UseYellowCard(),
-            AbilityCardType.Blue => player.UseBlueCard(),
-            AbilityCardType.Green => player.UseGreenCard(),
-            AbilityCardType.Red => player.UseRedCard(),
-            AbilityCardType.White => player.UseWhiteCard(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        return extData.CardInventory.CardCount > 0; 
     }
 
     private static int UseYellowCard(this Player player) {
@@ -314,9 +292,9 @@ public static class PlayerExtensions {
         player.DashDir.Y = 0f;
         player.Speed.X = aimX * BLUE_DASH_SPEED;
         player.Speed.Y = 0f;
-        player.Ducking = true;
         extData.CustomTrailTimer = 0.016f;
         dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
+        SlashFx.Burst(player.Center, player.DashDir.Angle());
 
         for (float timer = 0f; timer < BLUE_DASH_DURATION; timer += Engine.DeltaTime) {
             player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new Vector2(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
@@ -392,6 +370,7 @@ public static class PlayerExtensions {
         }
         
         player.DashDir = dashDir;
+        SlashFx.Burst(player.Center, player.DashDir.Angle());
         
         var newSpeed = RED_BOOST_DASH_SPEED * dashDir;
         float beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").X;
@@ -486,7 +465,7 @@ public static class PlayerExtensions {
             
             Input.Grab.ConsumeBuffer();
             cardInventory.PopCard();
-            extData.UseCardCooldown = MAX_USE_CARD_COOLDOWN;
+            extData.UseCardCooldown = USE_CARD_COOLDOWN;
 
             float newSpeed = player.Speed.Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
 
@@ -530,7 +509,7 @@ public static class PlayerExtensions {
         Audio.Play(SFX.game_05_redbooster_end);
     }
 
-    private static bool InterceptRespawn(Player player) {
+    private static bool TryInterceptRespawn(Player player) {
         var levelController = player.Scene.Tracker.GetEntity<RushLevelController>();
 
         if (levelController == null)
@@ -650,6 +629,25 @@ public static class PlayerExtensions {
         return defaultSpeed;
     }
 
+    private static int UseCard(Player player) {
+        player.GetData(out _, out var extData);
+        
+        var cardInventory = extData.CardInventory;
+        
+        Input.Grab.ConsumeBuffer();
+        cardInventory.PopCard();
+        extData.UseCardCooldown = USE_CARD_COOLDOWN;
+
+        return cardInventory.CardType switch {
+            AbilityCardType.Yellow => player.UseYellowCard(),
+            AbilityCardType.Blue => player.UseBlueCard(),
+            AbilityCardType.Green => player.UseGreenCard(),
+            AbilityCardType.Red => player.UseRedCard(),
+            AbilityCardType.White => player.UseWhiteCard(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
     private static float GetAirFrictionMultiplier(float defaultMultiplier, Player player) {
         if (!HeavenRushModule.Session.HeavenRushModeEnabled)
             return defaultMultiplier;
@@ -683,7 +681,6 @@ public static class PlayerExtensions {
             
             player.Ducking = false;
             dynamicData.Invoke("SuperJump");
-            player.StateMachine.State = 0;
 
             if (Math.Abs(player.Speed.X) < speedBefore)
                 player.Speed.X = speedBefore * Math.Sign(player.Speed.X);
@@ -715,20 +712,6 @@ public static class PlayerExtensions {
 
     private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) => player.Active && canRetry(player);
 
-    private static bool Player_get_DashAttacking(Func<Player, bool> dashAttacking, Player player) {
-        if (dashAttacking(player))
-            return true;
-
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return false;
-        
-        var dynamicData = DynamicData.For(player);
-        var extData = dynamicData.Get<Data>("heavenRushData");
-        int state = player.StateMachine.State;
-
-        return state == extData.BlueDashIndex || state == extData.RedBoostDashIndex;
-    }
-    
     private static void Player_orig_Added_il(ILContext il) {
         var cursor = new ILCursor(il);
 
@@ -739,16 +722,15 @@ public static class PlayerExtensions {
             instr => instr.MatchCallvirt<StateMachine>("set_State"));
 
         int index = cursor.Index;
+        ILLabel label = null;
 
-        cursor.GotoNext(instr => instr.OpCode == OpCodes.Br);
-
-        var label = (ILLabel) cursor.Next.Operand;
+        cursor.GotoNext(instr => instr.MatchBr(out label));
 
         cursor.Index = index;
         cursor.MoveAfterLabels();
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(InterceptRespawn)));
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(TryInterceptRespawn)));
         cursor.Emit(OpCodes.Brtrue, label);
     }
     
@@ -830,6 +812,23 @@ public static class PlayerExtensions {
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(BeforeBaseUpdate)));
     }
 
+    private static void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH onCollideH, Player player, CollisionData data) {
+        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
+            onCollideH(player, data);
+            
+            return;
+        }
+
+        player.GetData(out _, out var extData);
+        
+        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.BlueDashIndex) && data.Hit is DashBlock dashBlock) {
+            dashBlock.Break(player.Center, data.Direction, true, true);
+            Celeste.Freeze(0.016f);
+        }
+        else
+            onCollideH(player, data);
+    }
+
     private static void Player_OnCollideH_il(ILContext il) {
         var cursor = new ILCursor(il);
 
@@ -853,6 +852,23 @@ public static class PlayerExtensions {
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(OnTrueCollideH)));
+    }
+
+    private static void Player_OnCollideV(On.Celeste.Player.orig_OnCollideV onCollideV, Player player, CollisionData data) {
+        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
+            onCollideV(player, data);
+            
+            return;
+        }
+        
+        player.GetData(out _, out var extData);
+        
+        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.GreenDiveIndex) && data.Hit is DashBlock dashBlock) {
+            dashBlock.Break(player.Center, data.Direction, true, true);
+            Celeste.Freeze(0.016f);
+        }
+        else
+            onCollideV(player, data);
     }
 
     private static void Player_OnCollideV_il(ILContext il) {

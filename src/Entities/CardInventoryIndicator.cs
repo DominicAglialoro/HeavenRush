@@ -20,7 +20,6 @@ public class CardInventoryIndicator : Entity {
         texture = GFX.Game["objects/abilityCardIndicator/texture"];
         outline = GFX.Game["objects/abilityCardIndicator/outline"];
         Depth = -13001;
-        AddTag(Tags.Persistent);
     }
 
     public override void Added(Scene scene) {

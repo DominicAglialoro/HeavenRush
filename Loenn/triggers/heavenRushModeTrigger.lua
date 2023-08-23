@@ -4,7 +4,8 @@ heavenRushModeTrigger.name = "heavenRush/heavenRushModeTrigger"
 heavenRushModeTrigger.placements = {
 	name = "trigger",
 	data = {
-		newValue = true
+		newValue = true,
+		coversScreen = true
 	}
 }
 
