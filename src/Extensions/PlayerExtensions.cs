@@ -110,6 +110,17 @@ public static class PlayerExtensions {
         player.StateMachine.State = 14;
     }
 
+    public static bool GiveCard(this Player player, AbilityCardType cardType) {
+        player.GetData(out _, out var extData);
+
+        if (!extData.CardInventory.TryAddCard(cardType))
+            return false;
+
+        Input.Grab.BufferTime = 0.08f;
+
+        return true;
+    }
+
     public static bool HitDemon(this Player player) {
         player.GetData(out _, out var extData);
 
@@ -134,7 +145,7 @@ public static class PlayerExtensions {
     }
 
     private static bool ShouldUseCard(this Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled || !Input.Grab.Pressed)
+        if (!Input.Grab.Pressed)
             return false;
 
         player.GetData(out _, out var extData);
@@ -144,7 +155,7 @@ public static class PlayerExtensions {
 
     private static int UseYellowCard(this Player player) {
         Audio.Play(SFX.game_gen_thing_booped, player.Position);
-        Celeste.Freeze(0.033f);
+        Celeste.Freeze(0.016f);
         player.Scene.Add(Engine.Pooler.Create<SpeedRing>().Init(player.Center, MathHelper.PiOver2, Color.White));
         player.ResetStateValues();
         player.Sprite.Scale = new Vector2(0.4f, 1.8f);
@@ -265,9 +276,6 @@ public static class PlayerExtensions {
     }
 
     private static bool IsInCustomDash(this Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return false;
-        
         player.GetData(out _, out var extData);
 
         int state = player.StateMachine.State;
@@ -373,10 +381,13 @@ public static class PlayerExtensions {
         SlashFx.Burst(player.Center, player.DashDir.Angle());
         
         var newSpeed = RED_BOOST_DASH_SPEED * dashDir;
-        float beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").X;
+        var beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed");
         
-        if (Math.Sign(newSpeed.X) == Math.Sign(beforeDashSpeed) && Math.Abs(newSpeed.X) < Math.Abs(beforeDashSpeed))
-            newSpeed.X = beforeDashSpeed;
+        if (Math.Sign(newSpeed.X) == Math.Sign(beforeDashSpeed.X) && Math.Abs(newSpeed.X) < Math.Abs(beforeDashSpeed.X))
+            newSpeed.X = beforeDashSpeed.X;
+        
+        if (Math.Sign(newSpeed.Y) == Math.Sign(beforeDashSpeed.Y) && Math.Abs(newSpeed.Y) < Math.Abs(beforeDashSpeed.Y))
+            newSpeed.Y = beforeDashSpeed.Y;
 
         player.Speed = newSpeed;
 
@@ -522,9 +533,6 @@ public static class PlayerExtensions {
     }
     
     private static void BeforeBaseUpdate(Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
-        
         player.GetData(out var dynamicData, out var extData);
 
         bool check = player.CollideCheck<SurfPlatform>(player.Position + Vector2.UnitY);
@@ -541,9 +549,6 @@ public static class PlayerExtensions {
     }
 
     private static void OnTrueCollideH(Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
-        
         player.GetData(out _, out var extData);
         
         if (player.StateMachine.State == extData.WhiteDashIndex)
@@ -556,9 +561,6 @@ public static class PlayerExtensions {
     }
 
     private static void OnTrueCollideV(Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
-        
         player.GetData(out var dynamicData, out var extData);
 
         int state = player.StateMachine.State;
@@ -580,16 +582,16 @@ public static class PlayerExtensions {
             int killedCount = 0;
             
             foreach (var entity in player.Scene.Tracker.GetEntities<Demon>()) {
-                if (Vector2.DistanceSquared(player.Position, entity.Position) > GREEN_DIVE_LAND_KILL_RADIUS * GREEN_DIVE_LAND_KILL_RADIUS)
+                if (Vector2.DistanceSquared(player.Center, entity.Center) > GREEN_DIVE_LAND_KILL_RADIUS * GREEN_DIVE_LAND_KILL_RADIUS)
                     continue;
                 
-                ((Demon) entity).Die((entity.Position - player.Position).Angle());
+                ((Demon) entity).Die((entity.Center - player.Center).Angle());
                 killedCount++;
             }
 
             if (killedCount > 0) {
                 player.RefillDash();
-                Audio.Play(SFX.game_09_iceball_break, player.Position);
+                Audio.Play(SFX.game_09_iceball_break, player.Center);
                 player.Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
             }
         }
@@ -598,9 +600,6 @@ public static class PlayerExtensions {
     }
 
     private static bool IsInTransitionableState(Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return false;
-        
         player.GetData(out _, out var extData);
 
         int state = player.StateMachine.State;
@@ -609,9 +608,6 @@ public static class PlayerExtensions {
     }
     
     private static float GetUltraBoostSpeed(float defaultSpeed, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return defaultSpeed;
-        
         player.GetData(out _, out var extData);
 
         int state = player.StateMachine.State;
@@ -638,6 +634,9 @@ public static class PlayerExtensions {
         cardInventory.PopCard();
         extData.UseCardCooldown = USE_CARD_COOLDOWN;
 
+        if (cardInventory.CardCount == 0)
+            Input.Grab.BufferTime = 0f;
+
         return cardInventory.CardType switch {
             AbilityCardType.Yellow => player.UseYellowCard(),
             AbilityCardType.Blue => player.UseBlueCard(),
@@ -649,21 +648,15 @@ public static class PlayerExtensions {
     }
 
     private static float GetAirFrictionMultiplier(float defaultMultiplier, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return defaultMultiplier;
-        
         player.GetData(out _, out var extData);
 
         return extData.RedBoostTimer > 0f ? RED_BOOST_AIR_FRICTION : defaultMultiplier;
     }
 
     private static float GetGroundFrictionMultiplier(float defaultMultiplier, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return defaultMultiplier;
-        
         player.GetData(out _, out var extData);
 
-        return (extData.RedBoostTimer > 0f || extData.Surfing) ? GROUND_BOOST_FRICTION : defaultMultiplier;
+        return extData.RedBoostTimer > 0f || extData.Surfing ? GROUND_BOOST_FRICTION : defaultMultiplier;
     }
 
     private static bool TryDoCustomJump(Player player) {
@@ -708,6 +701,7 @@ public static class PlayerExtensions {
         extData.GreenDiveIndex = stateMachine.AddState(player.GreenDiveUpdate);
         extData.RedBoostDashIndex = stateMachine.AddState(null, player.RedBoostDashCoroutine);
         extData.WhiteDashIndex = stateMachine.AddState(null, player.WhiteDashCoroutine, null, player.WhiteDashEnd);
+        Input.Grab.BufferTime = 0f;
     }
 
     private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) => player.Active && canRetry(player);
@@ -735,12 +729,6 @@ public static class PlayerExtensions {
     }
     
     private static void Player_Update(On.Celeste.Player.orig_Update update, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
-            update(player);
-            
-            return;
-        }
-        
         player.GetData(out var dynamicData, out var extData);
         extData.UseCardCooldown -= Engine.DeltaTime;
 
@@ -813,18 +801,10 @@ public static class PlayerExtensions {
     }
 
     private static void Player_OnCollideH(On.Celeste.Player.orig_OnCollideH onCollideH, Player player, CollisionData data) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
-            onCollideH(player, data);
-            
-            return;
-        }
-
         player.GetData(out _, out var extData);
         
-        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.BlueDashIndex) && data.Hit is DashBlock dashBlock) {
+        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.BlueDashIndex) && data.Hit is DashBlock dashBlock)
             dashBlock.Break(player.Center, data.Direction, true, true);
-            Celeste.Freeze(0.016f);
-        }
         else
             onCollideH(player, data);
     }
@@ -855,18 +835,10 @@ public static class PlayerExtensions {
     }
 
     private static void Player_OnCollideV(On.Celeste.Player.orig_OnCollideV onCollideV, Player player, CollisionData data) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
-            onCollideV(player, data);
-            
-            return;
-        }
-        
         player.GetData(out _, out var extData);
         
-        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.GreenDiveIndex) && data.Hit is DashBlock dashBlock) {
+        if ((extData.RedBoostTimer > 0f || player.StateMachine.State == extData.GreenDiveIndex) && data.Hit is DashBlock dashBlock)
             dashBlock.Break(player.Center, data.Direction, true, true);
-            Celeste.Freeze(0.016f);
-        }
         else
             onCollideV(player, data);
     }
@@ -950,12 +922,6 @@ public static class PlayerExtensions {
     }
 
     private static void Player_Jump(On.Celeste.Player.orig_Jump jump, Player player, bool particles, bool playsfx) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled) {
-            jump(player, particles, playsfx);
-            
-            return;
-        }
-        
         player.GetData(out _, out var extData);
         
         if (extData.Surfing)
@@ -965,7 +931,9 @@ public static class PlayerExtensions {
     }
 
     private static void Player_WallJump(On.Celeste.Player.orig_WallJump wallJump, Player player, int dir) {
-        if (Math.Sign(Input.MoveX.Value) != dir) {
+        player.GetData(out var dynamicData, out var extData);
+        
+        if (extData.RedBoostTimer == 0f && extData.RedBoostStoredSpeedTimer == 0f) {
             wallJump(player, dir);
             
             return;
@@ -975,20 +943,23 @@ public static class PlayerExtensions {
         float beforeSpeedY = player.Speed.Y;
         
         wallJump(player, dir);
-        player.GetData(out _, out var extData);
 
-        float newSpeed = Math.Abs(player.Speed.X);
+        if (Math.Sign(Input.MoveX.Value) == dir) {
+            float newSpeed = Math.Abs(player.Speed.X);
 
-        if (extData.RedBoostTimer > 0f && beforeSpeedX > newSpeed)
-            newSpeed = beforeSpeedX;
+            if (extData.RedBoostTimer > 0f && beforeSpeedX > newSpeed)
+                newSpeed = beforeSpeedX;
 
-        if (extData.RedBoostStoredSpeedTimer > 0f && dir * extData.RedBoostStoredSpeed > newSpeed)
-            newSpeed = dir * extData.RedBoostStoredSpeed;
+            if (extData.RedBoostStoredSpeedTimer > 0f && dir * extData.RedBoostStoredSpeed > newSpeed)
+                newSpeed = dir * extData.RedBoostStoredSpeed;
 
-        player.Speed.X = dir * newSpeed;
+            player.Speed.X = dir * newSpeed;
+        }
 
         if (player.Speed.Y > beforeSpeedY)
             player.Speed.Y = beforeSpeedY;
+
+        dynamicData.Set("varJumpTimer", 0f);
     }
 
     private static void Player_NormalUpdate_il(ILContext il) {
@@ -1042,10 +1013,6 @@ public static class PlayerExtensions {
 
     private static void Player_DashBegin(On.Celeste.Player.orig_DashBegin dashBegin, Player player) {
         dashBegin(player);
-        
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
-
         player.GetData(out _, out var extData);
         extData.BlueDashHyperGraceTimer = 0f;
         extData.WhiteDashSuperGraceTimer = 0f;
@@ -1057,7 +1024,7 @@ public static class PlayerExtensions {
     }
 
     private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite updateSprite, Player player) {
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled || !player.IsInCustomDash()) {
+        if (!player.IsInCustomDash()) {
             updateSprite(player);
 
             return;

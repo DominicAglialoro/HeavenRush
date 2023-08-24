@@ -22,8 +22,8 @@ public class CardInventoryIndicator : Entity {
         Depth = -13001;
     }
 
-    public override void Added(Scene scene) {
-        base.Added(scene);
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
         
         var player = Scene.Tracker.GetEntity<Player>();
         
@@ -60,9 +60,6 @@ public class CardInventoryIndicator : Entity {
 
     public override void Render() {
         base.Render();
-        
-        if (!HeavenRushModule.Session.HeavenRushModeEnabled)
-            return;
 
         var player = Scene.Tracker.GetEntity<Player>();
         

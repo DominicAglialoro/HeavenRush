@@ -13,4 +13,4 @@ entities.heavenRush/rushGoal.placements.name.goal=Rush Goal
 
 entities.heavenRush/rushLevelController.placements.name.controller=Rush Level Controller
 
-triggers.heavenRush/heavenRushModeTrigger.placements.name.trigger=Heaven Rush Mode Trigger
+triggers.heavenRush/trueNoGrabTrigger.placements.name.trigger=True No Grab Trigger

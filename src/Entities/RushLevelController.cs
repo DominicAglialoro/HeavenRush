@@ -15,18 +15,22 @@ public class RushLevelController : Entity {
     private long startedAtTime;
     private Level level;
 
-    public override void Added(Scene scene) {
-        base.Added(scene);
-
+    public RushLevelController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Add(stateMachine = new StateMachine());
         stateMachine.SetCallbacks(0, AwaitingRespawnUpdate);
         stateMachine.SetCallbacks(1, GameplayUpdate);
         stateMachine.SetCallbacks(2, CompleteUpdate);
-
         Tag = Tags.FrozenUpdate;
-        
-        DemonCount = scene.Tracker.CountEntities<Demon>();
+    }
+
+    public override void Added(Scene scene) {
+        base.Added(scene);
         level = scene as Level;
+    }
+
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+        DemonCount = scene.Tracker.CountEntities<Demon>();
     }
 
     public void RespawnCompleted() => startedAtTime = level.Session.Time;

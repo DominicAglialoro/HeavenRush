@@ -4,12 +4,12 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush.Triggers; 
 
-[CustomEntity("heavenRush/heavenRushModeTrigger")]
-public class HeavenRushModeTrigger : Trigger {
+[CustomEntity("heavenRush/trueNoGrabTrigger")]
+public class TrueNoGrabTrigger : Trigger {
     private bool newValue;
     private bool coversScreen;
     
-    public HeavenRushModeTrigger(EntityData data, Vector2 offset) : base(data, offset) {
+    public TrueNoGrabTrigger(EntityData data, Vector2 offset) : base(data, offset) {
         newValue = data.Bool("newValue");
         coversScreen = data.Bool("coversScreen");
     }
@@ -29,7 +29,6 @@ public class HeavenRushModeTrigger : Trigger {
 
     public override void OnEnter(Player player) {
         base.OnEnter(player);
-        HeavenRushModule.Session.HeavenRushModeEnabled = newValue;
-        Input.Grab.BufferTime = newValue ? 0.08f : 0f;
+        HeavenRushModule.Session.TrueNoGrabEnabled = newValue;
     }
 }

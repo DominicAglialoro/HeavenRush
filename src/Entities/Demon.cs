@@ -1,3 +1,4 @@
+using System;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -141,7 +142,7 @@ public class Demon : Entity {
     private void OnPlayer(Player player) {
         if (alive && player.HitDemon()) {
             Celeste.Freeze(0.016f);
-            Audio.Play(SFX.game_09_iceball_break, Position);
+            Audio.Play(SFX.game_09_iceball_break, Center);
             Die(player);
             Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(1);
         }
