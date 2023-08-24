@@ -1,4 +1,3 @@
-using System;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -54,8 +53,27 @@ public class Demon : Entity {
         SpinMax = 4.712389f,
         SpinFlippedChance = true
     }) { Offset = offset };
-    
-    private bool grounded;
+
+    public static bool KillInRadius(Scene scene, Vector2 center, float radius) {
+        int killedCount = 0;
+            
+        foreach (var entity in scene.Tracker.GetEntities<Demon>()) {
+            if (Vector2.DistanceSquared(center, entity.Center) > radius * radius)
+                continue;
+                
+            ((Demon) entity).Die((entity.Center - center).Angle());
+            killedCount++;
+        }
+
+        if (killedCount == 0)
+            return false;
+        
+        Audio.Play(SFX.game_09_iceball_break, center);
+        scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
+
+        return true;
+    }
+
     private bool restoresDash;
     private Sprite body;
     private Image outline;
@@ -67,10 +85,9 @@ public class Demon : Entity {
     private Vector2 lastPlayerPosition;
 
     public Demon(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        grounded = data.Bool("grounded");
         restoresDash = data.Bool("restoresDash");
 
-        Collider = new Circle(8f);
+        Collider = new Circle(10f);
         Depth = 100;
         
         Add(body = new Sprite(GFX.Game, "objects/demon/body"));
@@ -87,7 +104,7 @@ public class Demon : Entity {
         Add(eyes = new Image(GFX.Game["objects/demon/eyes"]));
         eyes.CenterOrigin();
 
-        if (grounded) {
+        if (data.Bool("grounded")) {
             feet = new Image(GFX.Game["objects/demon/feet"]);
             
             Add(feet);

@@ -579,21 +579,8 @@ public static class PlayerExtensions {
             level.Particles.Emit(Player.P_SummitLandB, 8, player.BottomCenter + Vector2.UnitX * 2f, Vector2.UnitX * 2f, -0.2617994f);
             level.Displacement.AddBurst(player.Center, 0.4f, 16f, 128f, 1f, Ease.QuadOut, Ease.QuadOut);
 
-            int killedCount = 0;
-            
-            foreach (var entity in player.Scene.Tracker.GetEntities<Demon>()) {
-                if (Vector2.DistanceSquared(player.Center, entity.Center) > GREEN_DIVE_LAND_KILL_RADIUS * GREEN_DIVE_LAND_KILL_RADIUS)
-                    continue;
-                
-                ((Demon) entity).Die((entity.Center - player.Center).Angle());
-                killedCount++;
-            }
-
-            if (killedCount > 0) {
+            if (Demon.KillInRadius(player.Scene, player.Center, GREEN_DIVE_LAND_KILL_RADIUS))
                 player.RefillDash();
-                Audio.Play(SFX.game_09_iceball_break, player.Center);
-                player.Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
-            }
         }
         else if (state == extData.WhiteDashIndex)
             player.StateMachine.State = 0;

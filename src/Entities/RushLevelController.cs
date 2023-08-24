@@ -74,7 +74,21 @@ public class RushLevelController : Entity {
         return 1;
     }
 
-    private int GameplayUpdate() => 1;
+    private int GameplayUpdate() {
+        if (!HeavenRushModule.Settings.InstantRetry.Pressed)
+            return 1;
+
+        level.OnEndOfFrame += () => {
+            foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+                player.RemoveSelf();
+                
+            level.Reload();
+        };
+
+        Active = false;
+
+        return 1;
+    }
 
     private int CompleteUpdate() {
         if (Input.MenuConfirm.Pressed) {

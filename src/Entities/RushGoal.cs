@@ -6,7 +6,6 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/rushGoal"), Tracked]
 public class RushGoal : Entity {
-    private Image outline;
     private Image back;
     private Sprite crystal;
     private Sprite effect;
@@ -17,7 +16,9 @@ public class RushGoal : Entity {
         Depth = 100;
         Collidable = false;
         
-        Add(outline = new Image(GFX.Game["objects/rushGoal/outline"]));
+        var outline = new Image(GFX.Game["objects/rushGoal/outline"]);
+        
+        Add(outline);
         outline.JustifyOrigin(0.5f, 1f);
         
         Add(back = new Image(GFX.Game["objects/rushGoal/back"]));
