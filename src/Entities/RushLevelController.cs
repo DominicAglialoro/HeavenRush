@@ -7,15 +7,23 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/rushLevelController"), Tracked]
 public class RushLevelController : Entity {
+    public bool RequireKillAllDemons { get; }
+
+    public long Time => startedAtTime >= 0 ? level.Session.Time - startedAtTime : 0;
+    
     public int DemonCount { get; private set; }
 
+    public event Action LevelCleared;
+
     public event Action DemonKilled;
-    
+
     private StateMachine stateMachine;
-    private long startedAtTime;
+    private long startedAtTime = -1;
     private Level level;
 
     public RushLevelController(EntityData data, Vector2 offset) : base(data.Position + offset) {
+        RequireKillAllDemons = data.Bool("requireKillAllDemons");
+        
         Add(stateMachine = new StateMachine());
         stateMachine.SetCallbacks(0, AwaitingRespawnUpdate);
         stateMachine.SetCallbacks(1, GameplayUpdate);
@@ -41,10 +49,8 @@ public class RushLevelController : Entity {
 
         DemonCount -= count;
 
-        if (DemonCount == 0) {
+        if (DemonCount == 0)
             Util.PlaySound("event:/classic/sfx13", 2f);
-            Scene.Tracker.GetEntity<RushGoal>()?.Open();
-        }
         else
             Util.PlaySound("event:/classic/sfx8", 2f);
         
@@ -54,7 +60,8 @@ public class RushLevelController : Entity {
     public void GoalReached() {
         level.Frozen = true;
         stateMachine.State = 2;
-        Scene.Tracker.GetEntity<LevelCompleteUI>().Play(level.Session.Time - startedAtTime);
+        Scene.Tracker.GetEntity<LevelCompleteUI>().Play(Time);
+        LevelCleared?.Invoke();
     }
 
     private int AwaitingRespawnUpdate() {
@@ -79,10 +86,17 @@ public class RushLevelController : Entity {
             return 1;
 
         level.OnEndOfFrame += () => {
+            var session = level.Session;
+            
+            session.Deaths++;
+            session.DeathsInCurrentLevel++;
+            SaveData.Instance.AddDeath(session.Area);
+            
             foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
                 player.RemoveSelf();
-                
+            
             level.Reload();
+            level.Wipe.Cancel();
         };
 
         Active = false;

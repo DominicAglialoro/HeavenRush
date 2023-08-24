@@ -47,7 +47,7 @@ public class DemonCounter : Entity {
     }
 
     public override void Render() {
-        if (level.Paused)
+        if (level.Paused || !levelController.RequireKillAllDemons)
             return;
 
         var position = new Vector2(MathHelper.Lerp(40f, -bg.Width, Ease.CubeIn(exitAnim / EXIT_ANIM_DURATION)), GetYPosition());

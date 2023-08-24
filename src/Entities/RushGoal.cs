@@ -10,6 +10,7 @@ public class RushGoal : Entity {
     private Sprite crystal;
     private Sprite effect;
     private SineWave sine;
+    private RushLevelController levelController;
     
     public RushGoal(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(16f, 24f, -8f, -24f);
@@ -44,6 +45,7 @@ public class RushGoal : Entity {
         Add(new PlayerCollider(OnPlayer));
 
         crystal.Y = 8f + 2f * sine.Value;
+        Tag = Tags.FrozenUpdate;
     }
 
     public override void Update() {
@@ -51,15 +53,23 @@ public class RushGoal : Entity {
         crystal.Y = -12f + sine.Value;
     }
 
-    public void Open() {
+    public override void Awake(Scene scene) {
+        base.Awake(scene);
+        levelController = Scene.Tracker.GetEntity<RushLevelController>();
+        levelController.DemonKilled += OnDemonKilled;
+    }
+    private void OnPlayer(Player player) {
+        Collidable = false;
+        Audio.Play(SFX.game_07_checkpointconfetti, Position);
+        levelController.GoalReached();
+    }
+
+    private void OnDemonKilled() {
+        if (levelController.DemonCount > 0)
+            return;
+        
         Collidable = true;
         back.Visible = true;
         effect.Visible = true;
-    }
-
-    private void OnPlayer(Player player) {
-        Audio.Play(SFX.game_07_checkpointconfetti);
-        Collidable = false;
-        Scene.Tracker.GetEntity<RushLevelController>()?.GoalReached();
     }
 }

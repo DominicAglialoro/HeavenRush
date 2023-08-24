@@ -6,8 +6,7 @@ rushLevelController.texture = "loenn/rushLevelController/rushLevelController"
 rushLevelController.placements = {
 	name = "controller",
 	data = {
-		requireKillAllDemons = true,
-		berryObjectiveTime = 0
+		requireKillAllDemons = true
 	}
 }
 
