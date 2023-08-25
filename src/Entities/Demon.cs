@@ -37,7 +37,7 @@ public class Demon : Entity {
     };
 
     private static ParticleBurst CreateKillParticleLarge(int index, Vector2 offset) => new(new ParticleType {
-        Source = GFX.Game[$"particles/demonShatter/shatter{index}"],
+        Source = GFX.Game[$"heavenRush/particles/demonShatter/shatter{index}"],
         Color = Color.White,
         Color2 = Color.Black,
         ColorMode = ParticleType.ColorModes.Fade,
@@ -60,8 +60,12 @@ public class Demon : Entity {
         foreach (var entity in scene.Tracker.GetEntities<Demon>()) {
             if (Vector2.DistanceSquared(center, entity.Center) > radius * radius)
                 continue;
-                
-            ((Demon) entity).Die((entity.Center - center).Angle());
+
+            var demon = (Demon) entity;
+            float angle = (demon.Center - center).Angle();
+            
+            demon.Die(demon.CollideCheck<Player>());
+            demon.Add(new Coroutine(Util.AfterFrame(() => demon.SpawnKillParticles(angle))));
             killedCount++;
         }
 
@@ -90,22 +94,22 @@ public class Demon : Entity {
         Collider = new Circle(10f);
         Depth = 100;
         
-        Add(body = new Sprite(GFX.Game, "objects/demon/body"));
+        Add(body = new Sprite(GFX.Game, "heavenRush/objects/demon/body"));
         body.AddLoop("body", "", 0.1f);
         body.Play("body");
         body.CenterOrigin();
         
-        Add(outline = new Image(GFX.Game["objects/demon/outline"]));
+        Add(outline = new Image(GFX.Game["heavenRush/objects/demon/outline"]));
         outline.CenterOrigin();
         
         if (!restoresDash)
             outline.Color = Color.Cyan;
         
-        Add(eyes = new Image(GFX.Game["objects/demon/eyes"]));
+        Add(eyes = new Image(GFX.Game["heavenRush/objects/demon/eyes"]));
         eyes.CenterOrigin();
 
         if (data.Bool("grounded")) {
-            feet = new Image(GFX.Game["objects/demon/feet"]);
+            feet = new Image(GFX.Game["heavenRush/objects/demon/feet"]);
             
             Add(feet);
             feet.CenterOrigin();
@@ -131,40 +135,28 @@ public class Demon : Entity {
     public override void Update() {
         base.Update();
         UpdateVisual();
-
-        if (Collidable && !alive && !CollideCheck<Player>())
-            Collidable = false;
-    }
-
-    public void Die(float angle) {
-        Die();
-        Add(new Coroutine(Util.AfterFrame(() => SpawnKillParticles(angle))));
-    }
-    
-    private void Die(Player player) {
-        Die();
-        Add(new Coroutine(Util.AfterFrame(() => {
-            var speed = player.Speed;
-
-            if (speed == Vector2.Zero)
-                speed = player.DashDir;
-
-            if (speed == Vector2.Zero)
-                SpawnKillParticles(player.Facing == Facings.Right ? 0f : MathHelper.Pi);
-            else
-                SpawnKillParticles(speed.Angle());
-        })));
     }
 
     private void OnPlayer(Player player) {
         if (alive && player.HitDemon()) {
             Celeste.Freeze(0.016f);
             Audio.Play(SFX.game_09_iceball_break, Center);
-            Die(player);
+            Die(true);
+            Add(new Coroutine(Util.AfterFrame(() => {
+                var speed = player.Speed;
+
+                if (speed == Vector2.Zero)
+                    speed = player.DashDir;
+
+                if (speed == Vector2.Zero)
+                    SpawnKillParticles(player.Facing == Facings.Right ? 0f : MathHelper.Pi);
+                else
+                    SpawnKillParticles(speed.Angle());
+            })));
             Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(1);
         }
         
-        if (restoresDash && !alive && player.RefillDash())
+        if (!alive && restoresDash && player.RefillDash())
             Collidable = false;
     }
 
@@ -183,14 +175,14 @@ public class Demon : Entity {
             eyes.Position = eyesOrigin;
     }
 
-    private void Die() {
+    private void Die(bool allowPhantomRestore) {
         alive = false;
 
-        if (!restoresDash)
+        if (!restoresDash || !allowPhantomRestore)
             Collidable = false;
 
         body.Stop();
-        body.Texture = GFX.Game["objects/demon/shatter"];
+        body.Texture = GFX.Game["heavenRush/objects/demon/shatter"];
         outline.Visible = false;
 
         if (feet != null)

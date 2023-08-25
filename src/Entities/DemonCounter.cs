@@ -15,7 +15,7 @@ public class DemonCounter : Entity {
     private RushLevelController levelController;
 
     public DemonCounter() {
-        bg = GFX.Gui["demonCounter/bg"];
+        bg = GFX.Gui["heavenRush/demonCounter/bg"];
         Depth = -101;
         Tag = Tags.HUD;
     }

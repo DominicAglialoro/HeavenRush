@@ -17,8 +17,8 @@ public class CardInventoryIndicator : Entity {
     private float animTimer = ANIM_DURATION;
     
     public CardInventoryIndicator() {
-        texture = GFX.Game["objects/abilityCardIndicator/texture"];
-        outline = GFX.Game["objects/abilityCardIndicator/outline"];
+        texture = GFX.Game["heavenRush/objects/abilityCardIndicator/texture"];
+        outline = GFX.Game["heavenRush/objects/abilityCardIndicator/outline"];
         Depth = -13001;
     }
 
