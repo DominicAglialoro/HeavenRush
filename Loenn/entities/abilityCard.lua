@@ -49,7 +49,7 @@ abilityCard.fieldInformation = {
 }
 
 function abilityCard.texture(room, entity)
-	return "heavenRush/loenn/card" .. entity.cardType
+	return "loenn/heavenRush/card" .. entity.cardType
 end
 
 return abilityCard

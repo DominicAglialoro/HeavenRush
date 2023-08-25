@@ -11,7 +11,7 @@ public class SurfPlatform : Solid {
     private Level level;
 
     public SurfPlatform(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, 8f, false) {
-        var texture = GFX.Game["heavenRush/objects/surfPlatform/texture"];
+        var texture = GFX.Game["objects/heavenRush/surfPlatform/texture"];
 
         for (int x = 0; x < Width; x += 8) {
             var image = new Image(texture);

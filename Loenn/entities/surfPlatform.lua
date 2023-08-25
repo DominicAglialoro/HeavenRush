@@ -12,7 +12,7 @@ surfPlatform.placements = {
 }
 
 function surfPlatform.sprite(room, entity)
-    local texture = "heavenRush/loenn/surfPlatform"
+    local texture = "loenn/heavenRush/surfPlatform"
 	
 	local x, y = entity.x or 0, entity.y or 0
     local width = entity.width or 8

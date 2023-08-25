@@ -37,7 +37,7 @@ demon.fieldInformation = {
 }
 
 function demon.texture(room, entity)
-	return entity.grounded and "heavenRush/loenn/demonGrounded" or "heavenRush/loenn/demonAerial"
+	return entity.grounded and "loenn/heavenRush/demonGrounded" or "loenn/heavenRush/demonAerial"
 end
 
 function demon.color(room, entity)

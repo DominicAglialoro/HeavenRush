@@ -37,7 +37,7 @@ public class Demon : Entity {
     };
 
     private static ParticleBurst CreateKillParticleLarge(int index, Vector2 offset) => new(new ParticleType {
-        Source = GFX.Game[$"heavenRush/particles/demonShatter/shatter{index}"],
+        Source = GFX.Game[$"particles/heavenRush/demonShatter/shatter{index}"],
         Color = Color.White,
         Color2 = Color.Black,
         ColorMode = ParticleType.ColorModes.Fade,
@@ -94,22 +94,22 @@ public class Demon : Entity {
         Collider = new Circle(10f);
         Depth = 100;
         
-        Add(body = new Sprite(GFX.Game, "heavenRush/objects/demon/body"));
+        Add(body = new Sprite(GFX.Game, "objects/heavenRush/demon/body"));
         body.AddLoop("body", "", 0.1f);
         body.Play("body");
         body.CenterOrigin();
         
-        Add(outline = new Image(GFX.Game["heavenRush/objects/demon/outline"]));
+        Add(outline = new Image(GFX.Game["objects/heavenRush/demon/outline"]));
         outline.CenterOrigin();
         
         if (!restoresDash)
             outline.Color = Color.Cyan;
         
-        Add(eyes = new Image(GFX.Game["heavenRush/objects/demon/eyes"]));
+        Add(eyes = new Image(GFX.Game["objects/heavenRush/demon/eyes"]));
         eyes.CenterOrigin();
 
         if (data.Bool("grounded")) {
-            feet = new Image(GFX.Game["heavenRush/objects/demon/feet"]);
+            feet = new Image(GFX.Game["objects/heavenRush/demon/feet"]);
             
             Add(feet);
             feet.CenterOrigin();
@@ -182,7 +182,7 @@ public class Demon : Entity {
             Collidable = false;
 
         body.Stop();
-        body.Texture = GFX.Game["heavenRush/objects/demon/shatter"];
+        body.Texture = GFX.Game["objects/heavenRush/demon/shatter"];
         outline.Visible = false;
 
         if (feet != null)

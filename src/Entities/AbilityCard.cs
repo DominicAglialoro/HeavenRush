@@ -28,14 +28,14 @@ public class AbilityCard : Entity {
         Collider = new Hitbox(16f, 16f, -8f, -8f);
         Depth = -100;
         
-        Add(image = new Image(GFX.Game["heavenRush/objects/abilityCard/texture"]));
+        Add(image = new Image(GFX.Game["objects/heavenRush/abilityCard/texture"]));
         image.CenterOrigin();
         image.SetColor(color);
         
-        Add(outline = new Image(GFX.Game["heavenRush/objects/abilityCard/outline"]));
+        Add(outline = new Image(GFX.Game["objects/heavenRush/abilityCard/outline"]));
         outline.CenterOrigin();
         
-        Add(flash = new Sprite(GFX.Game, "heavenRush/objects/abilityCard/flash"));
+        Add(flash = new Sprite(GFX.Game, "objects/heavenRush/abilityCard/flash"));
         flash.Add("flash", "", 0.1f);
         flash.OnFinish = _ => flash.Visible = false;
         flash.Color = Color.White * 0.5f;

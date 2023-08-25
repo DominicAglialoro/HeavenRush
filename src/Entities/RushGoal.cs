@@ -17,22 +17,22 @@ public class RushGoal : Entity {
         Depth = 100;
         Collidable = false;
         
-        var outline = new Image(GFX.Game["heavenRush/objects/rushGoal/outline"]);
+        var outline = new Image(GFX.Game["objects/heavenRush/rushGoal/outline"]);
         
         Add(outline);
         outline.JustifyOrigin(0.5f, 1f);
         
-        Add(back = new Image(GFX.Game["heavenRush/objects/rushGoal/back"]));
+        Add(back = new Image(GFX.Game["objects/heavenRush/rushGoal/back"]));
         back.Color = (Color.White * 0.25f) with { A = 0 };
         back.JustifyOrigin(0.5f, 1f);
         back.Visible = false;
 
-        Add(crystal = new Sprite(GFX.Game, "heavenRush/objects/rushGoal/crystal"));
+        Add(crystal = new Sprite(GFX.Game, "objects/heavenRush/rushGoal/crystal"));
         crystal.AddLoop("crystal", "", 0.5f);
         crystal.Play("crystal");
         crystal.CenterOrigin();
         
-        Add(effect = new Sprite(GFX.Game, "heavenRush/objects/rushGoal/effect"));
+        Add(effect = new Sprite(GFX.Game, "objects/heavenRush/rushGoal/effect"));
         effect.AddLoop("effect", "", 0.1f);
         effect.Play("effect");
         effect.Color = (Color.White * 0.5f) with { A = 0 };

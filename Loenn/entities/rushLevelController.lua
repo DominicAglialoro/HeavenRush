@@ -2,7 +2,7 @@ local rushLevelController = {}
 
 rushLevelController.name = "heavenRush/rushLevelController"
 rushLevelController.depth = -1000000
-rushLevelController.texture = "heavenRush/loenn/rushLevelController"
+rushLevelController.texture = "loenn/heavenRush/rushLevelController"
 rushLevelController.placements = {
 	name = "controller",
 	data = {
