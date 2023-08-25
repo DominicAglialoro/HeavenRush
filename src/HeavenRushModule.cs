@@ -11,6 +11,9 @@ public class HeavenRushModule : EverestModule {
     public override Type SessionType => typeof(HeavenRushSession);
     public static HeavenRushSession Session => (HeavenRushSession) Instance._Session;
 
+    public override Type SaveDataType => typeof(HeavenRushSaveData);
+    public static HeavenRushSaveData SaveData => (HeavenRushSaveData) Instance._SaveData;
+
     public HeavenRushModule() {
         Instance = this;
 #if DEBUG

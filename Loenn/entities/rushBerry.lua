@@ -5,9 +5,7 @@ rushBerry.depth = -100
 rushBerry.texture = "loenn/rushBerry/rushBerry"
 rushBerry.placements = {
 	name = "berry",
-	data = {
-		objectiveTime = 0
-	}
+	data = { }
 }
 
 return rushBerry

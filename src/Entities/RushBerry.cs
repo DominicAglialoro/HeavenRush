@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
@@ -6,22 +5,21 @@ using Monocle;
 
 namespace Celeste.Mod.HeavenRush; 
 
-[CustomEntity("heavenRush/rushBerry"), RegisterStrawberry(true, false)]
+[CustomEntity("heavenRush/rushBerry"), RegisterStrawberry(true, false), Tracked]
 public class RushBerry : Entity, IStrawberry {
     private EntityID id;
-    private long objectiveTime;
     private bool alreadyAcquired;
     private Sprite sprite;
-    private RushLevelController levelController;
-    private bool collected;
+    private Sprite points;
 
     public RushBerry(EntityData data, Vector2 offset, EntityID gid) : base(data.Position + offset) {
         id = gid;
-        objectiveTime = 10000 * data.Int("objectiveTime");
         alreadyAcquired = SaveData.Instance.CheckStrawberry(id);
         Depth = -100;
         
         Add(sprite = GFX.SpriteBank.Create(alreadyAcquired ? "ghostberry" : "strawberry"));
+        Add(points = GFX.SpriteBank.Create("strawberry"));
+        points.Visible = false;
         
         if (alreadyAcquired)
             sprite.Color = Color.White * 0.8f;
@@ -29,18 +27,17 @@ public class RushBerry : Entity, IStrawberry {
         Tag = Tags.FrozenUpdate;
     }
 
-    public override void Awake(Scene scene) {
-        base.Awake(scene);
-        levelController = scene.Tracker.GetEntity<RushLevelController>();
-        levelController.LevelCleared += OnLevelCleared;
+    public void OnCollect() {
+        SaveData.Instance.AddStrawberry(id, false);
+        
+        var session = ((Level) Scene).Session;
+        
+        session.DoNotLoad.Add(id);
+        session.Strawberries.Add(id);
+        Add(new Coroutine(CollectRoutine()));
     }
 
-    public override void Update() {
-        base.Update();
-        
-        if (collected || levelController.Time <= objectiveTime)
-            return;
-        
+    public void Pop() {
         Audio.Play(SFX.game_gen_seed_poof, Position);
 
         for (int i = 0; i < 6; i++) {
@@ -52,27 +49,18 @@ public class RushBerry : Entity, IStrawberry {
         RemoveSelf();
     }
 
-    public void OnCollect() {
-        collected = true;
-        SaveData.Instance.AddStrawberry(id, false);
-        
-        var session = ((Level) Scene).Session;
-        
-        session.DoNotLoad.Add(id);
-        session.Strawberries.Add(id);
-        Add(new Coroutine(CollectRoutine()));
-    }
-
-    private void OnLevelCleared() {
-        if (levelController.Time <= objectiveTime)
-            OnCollect();
-    }
-
     private IEnumerator CollectRoutine() {
         Audio.Play(SFX.game_gen_strawberry_get, Position, "colour", alreadyAcquired ? 1f : 0f);
         sprite.Play("collect");
 
         while (sprite.Animating)
+            yield return null;
+
+        sprite.Visible = false;
+        points.Visible = true;
+        points.Play("fade0");
+        
+        while (points.Animating)
             yield return null;
         
         RemoveSelf();
