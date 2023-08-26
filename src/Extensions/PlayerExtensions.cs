@@ -102,8 +102,6 @@ public static class PlayerExtensions {
         On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
     }
 
-    public static Data ExtData(this Player player) => DynamicData.For(player).Get<Data>("heavenRushData");
-
     public static void Spawn(this Player player) {
         player.Active = true;
         player.Visible = true;
@@ -113,9 +111,18 @@ public static class PlayerExtensions {
     public static bool GiveCard(this Player player, AbilityCardType cardType) {
         player.GetData(out _, out var extData);
 
-        if (!extData.CardInventory.TryAddCard(cardType))
+        var cardInventory = extData.CardInventory;
+
+        if (!cardInventory.TryAddCard(cardType))
             return false;
 
+        extData.CardInventoryIndicator ??= player.Scene.Tracker.GetEntity<CardInventoryIndicator>();
+
+        if (extData.CardInventoryIndicator == null)
+            player.Scene.Add(extData.CardInventoryIndicator = new CardInventoryIndicator());
+        
+        extData.CardInventoryIndicator.UpdateInventory(cardInventory.CardType, cardInventory.CardCount);
+        extData.CardInventoryIndicator.PlayAnimation();
         Input.Grab.BufferTime = 0.08f;
 
         return true;
@@ -144,13 +151,27 @@ public static class PlayerExtensions {
         extData = dynamicData.Get<Data>("heavenRushData");
     }
 
-    private static bool ShouldUseCard(this Player player) {
+    private static bool TryPopCard(this Player player) {
         if (!Input.Grab.Pressed)
             return false;
-
+        
         player.GetData(out _, out var extData);
+        
+        var cardInventory = extData.CardInventory;
 
-        return extData.CardInventory.CardCount > 0; 
+        if (cardInventory.CardCount == 0)
+            return false;
+        
+        Input.Grab.ConsumeBuffer();
+        cardInventory.PopCard();
+        extData.UseCardCooldown = USE_CARD_COOLDOWN;
+        extData.CardInventoryIndicator.UpdateInventory(cardInventory.CardType, cardInventory.CardCount);
+        extData.CardInventoryIndicator.StopAnimation();
+   
+        if (cardInventory.CardCount == 0)
+            Input.Grab.BufferTime = 0f;
+
+        return true;
     }
 
     private static int UseYellowCard(this Player player) {
@@ -468,15 +489,11 @@ public static class PlayerExtensions {
 
             var cardInventory = extData.CardInventory;
             
-            if (cardInventory.CardType != AbilityCardType.White || !player.ShouldUseCard()) {
+            if (cardInventory.CardType != AbilityCardType.White || !player.TryPopCard()) {
                 yield return null;
                 
                 continue;
             }
-            
-            Input.Grab.ConsumeBuffer();
-            cardInventory.PopCard();
-            extData.UseCardCooldown = USE_CARD_COOLDOWN;
 
             float newSpeed = player.Speed.Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
 
@@ -614,17 +631,8 @@ public static class PlayerExtensions {
 
     private static int UseCard(Player player) {
         player.GetData(out _, out var extData);
-        
-        var cardInventory = extData.CardInventory;
-        
-        Input.Grab.ConsumeBuffer();
-        cardInventory.PopCard();
-        extData.UseCardCooldown = USE_CARD_COOLDOWN;
 
-        if (cardInventory.CardCount == 0)
-            Input.Grab.BufferTime = 0f;
-
-        return cardInventory.CardType switch {
+        return extData.CardInventory.CardType switch {
             AbilityCardType.Yellow => player.UseYellowCard(),
             AbilityCardType.Blue => player.UseBlueCard(),
             AbilityCardType.Green => player.UseGreenCard(),
@@ -960,7 +968,7 @@ public static class PlayerExtensions {
         cursor.GotoLabel(label);
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(ShouldUseCard)));
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(TryPopCard)));
         
         var newLabel = cursor.DefineLabel();
         
@@ -1033,6 +1041,7 @@ public static class PlayerExtensions {
         public int RedBoostDashIndex;
         public int WhiteDashIndex;
         public CardInventory CardInventory = new();
+        public CardInventoryIndicator CardInventoryIndicator;
         public float UseCardCooldown;
         public bool KilledInBlueDash;
         public float BlueDashHyperGraceTimer;

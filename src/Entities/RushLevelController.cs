@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -7,6 +8,12 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/rushLevelController"), Tracked]
 public class RushLevelController : Entity {
+    private const int INIT = 0;
+    private const int AWAITING_RESPAWN = 1;
+    private const int LOOK_AROUND = 2;
+    private const int GAMEPLAY = 3;
+    private const int COMPLETE = 4;
+    
     public string LevelName { get; }
     
     public bool RequireKillAllDemons { get; }
@@ -28,6 +35,7 @@ public class RushLevelController : Entity {
     private RushOverlayUI overlayUi;
     private long startedAtTime = -1;
     private bool berryFailed;
+    private bool newBest;
 
     public RushLevelController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LevelName = data.Attr("levelName");
@@ -35,9 +43,11 @@ public class RushLevelController : Entity {
         BerryObjectiveTime = 10000 * data.Int("berryObjectiveTime");
         
         Add(stateMachine = new StateMachine());
-        stateMachine.SetCallbacks(0, AwaitingRespawnUpdate);
-        stateMachine.SetCallbacks(1, GameplayUpdate);
-        stateMachine.SetCallbacks(2, CompleteUpdate);
+        stateMachine.SetCallbacks(INIT, InitUpdate);
+        stateMachine.SetCallbacks(AWAITING_RESPAWN, AwaitingRespawnUpdate, null, AwaitingRespawnBegin, AwaitingRespawnEnd);
+        stateMachine.SetCallbacks(LOOK_AROUND, null, LookAroundCoroutine);
+        stateMachine.SetCallbacks(GAMEPLAY, GameplayUpdate, null, GameplayBegin);
+        stateMachine.SetCallbacks(COMPLETE, CompleteUpdate, null, CompleteBegin, CompleteEnd);
         Tag = Tags.FrozenUpdate;
     }
 
@@ -51,11 +61,7 @@ public class RushLevelController : Entity {
             BestTime = -1;
         
         DemonCount = level.Tracker.CountEntities<Demon>();
-    }
-
-    public void Init(RushOverlayUI overlayUi) {
-        this.overlayUi = overlayUi;
-        overlayUi.ShowStart(LevelName, BestTime, BerryObjectiveTime);
+        overlayUi = level.Tracker.GetEntity<RushOverlayUI>();
     }
 
     public void RespawnCompleted() => startedAtTime = level.Session.Time;
@@ -76,41 +82,104 @@ public class RushLevelController : Entity {
 
     public void GoalReached() {
         level.Frozen = true;
-        stateMachine.State = 2;
-
-        bool newBest = false;
 
         if (BestTime < 0 || Time < BestTime) {
             BestTime = Time;
             HeavenRushModule.SaveData.BestTimes[level.Session.Level] = Time;
             newBest = true;
         }
-
-        level.Tracker.GetEntity<RushOverlayUI>().ShowComplete(Time, BestTime, BerryObjectiveTime, newBest);
+        else
+            newBest = false;
         
         if (Time <= BerryObjectiveTime)
             level.Tracker.GetEntity<RushBerry>()?.OnCollect();
         
         LevelCleared?.Invoke();
+        stateMachine.State = COMPLETE;
     }
+
+    private int InitUpdate() => AWAITING_RESPAWN;
+
+    private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, BestTime, BerryObjectiveTime);
 
     private int AwaitingRespawnUpdate() {
         var player = Scene.Tracker.GetEntity<Player>();
 
         if (player == null)
-            return 0;
+            return AWAITING_RESPAWN;
 
         if (player.Active)
-            return 1;
-        
-        if (!Input.MenuConfirm.Pressed)
-            return 0;
-        
-        player.Spawn();
-        overlayUi.Hide();
+            return GAMEPLAY;
 
-        return 1;
+        if (Input.MenuConfirm.Pressed) {
+            player.Spawn();
+
+            return GAMEPLAY;
+        }
+        
+        if (Input.Talk.Pressed)
+            return LOOK_AROUND;
+
+        return AWAITING_RESPAWN;
     }
+
+    private void AwaitingRespawnEnd() => overlayUi.Hide();
+
+    private IEnumerator LookAroundCoroutine() {
+        var camStart = level.Camera.Position;
+        var camPosition = level.Camera.Position;
+        var camSpeed = Vector2.Zero;
+
+        Audio.Play(SFX.ui_game_lookout_on);
+
+        while (!Input.MenuCancel.Pressed) {
+            var aim = Input.Aim.Value;
+            float accel = 800f * Engine.DeltaTime;
+
+            camSpeed += accel * aim;
+
+            if (aim.X == 0f)
+                camSpeed.X = Calc.Approach(camSpeed.X, 0f, 2f * accel);
+            
+            if (aim.Y == 0f)
+                camSpeed.Y = Calc.Approach(camSpeed.Y, 0f, 2f * accel);
+
+            if (camSpeed.LengthSquared() > 57600f)
+                camSpeed = camSpeed.SafeNormalize(240f);
+
+            var bounds = level.Bounds;
+
+            camPosition += camSpeed * Engine.DeltaTime;
+
+            if (camPosition.X > bounds.Right - 320f) {
+                camPosition.X = bounds.Right - 320f;
+                camSpeed.X = 0;
+            }
+            else if (camPosition.X < bounds.Left) {
+                camPosition.X = bounds.Left;
+                camSpeed.X = 0;
+            }
+            
+            if (camPosition.Y > bounds.Bottom - 180f) {
+                camPosition.Y = bounds.Bottom - 180f;
+                camSpeed.Y = 0;
+            }
+            else if (camPosition.Y < bounds.Top) {
+                camPosition.Y = bounds.Top;
+                camSpeed.Y = 0;
+            }
+
+            level.Camera.Position = camPosition;
+
+            yield return null;
+        }
+        
+        Audio.Play(SFX.ui_game_lookout_off);
+        level.Camera.Position = camStart;
+        stateMachine.State = AWAITING_RESPAWN;
+    }
+
+    private void GameplayBegin() => overlayUi.Hide();
 
     private int GameplayUpdate() {
         if (!berryFailed && Time > BerryObjectiveTime) {
@@ -119,7 +188,7 @@ public class RushLevelController : Entity {
         }
         
         if (!HeavenRushModule.Settings.InstantRetry.Pressed)
-            return 1;
+            return GAMEPLAY;
 
         level.OnEndOfFrame += () => {
             var session = level.Session;
@@ -137,8 +206,10 @@ public class RushLevelController : Entity {
 
         Active = false;
 
-        return 1;
+        return GAMEPLAY;
     }
+
+    private void CompleteBegin() => overlayUi.ShowComplete(Time, BestTime, BerryObjectiveTime, newBest);
 
     private int CompleteUpdate() {
         if (Input.MenuConfirm.Pressed) {
@@ -171,10 +242,12 @@ public class RushLevelController : Entity {
             });
         }
         else
-            return 2;
+            return COMPLETE;
 
         Active = false;
 
-        return 2;
+        return COMPLETE;
     }
+
+    private void CompleteEnd() => overlayUi.Hide();
 }

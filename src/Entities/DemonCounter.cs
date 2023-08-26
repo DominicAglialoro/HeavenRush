@@ -11,7 +11,7 @@ public class DemonCounter : Entity {
     private Level level;
     private MTexture bg;
     private float textAnim = TEXT_ANIM_DURATION;
-    private float exitAnim = TEXT_ANIM_DURATION;
+    private float exitAnim;
     private RushLevelController levelController;
 
     public DemonCounter() {

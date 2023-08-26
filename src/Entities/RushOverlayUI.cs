@@ -35,7 +35,7 @@ public class RushOverlayUI : Entity {
         if (Scene.Paused)
             return;
         
-        Draw.Rect(Vector2.Zero, 1920f, 1080f, Color.Black * 0.75f);
+        Draw.Rect(Vector2.Zero, 1920f, 1080f, Color.Black * 0.5f);
 
         if (showComplete) {
             Text(ActiveFont.Font, "Level Complete!", SCREEN_CENTER - 120f * Vector2.UnitY, new Vector2(0.5f, 0.5f), 2f * Vector2.One);

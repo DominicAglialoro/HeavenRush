@@ -12,8 +12,8 @@ public class CardInventoryIndicator : Entity {
 
     private MTexture texture;
     private MTexture outline;
-    private AbilityCardType previousCardType;
-    private int previousCardCount;
+    private AbilityCardType cardType;
+    private int cardCount;
     private float animTimer = ANIM_DURATION;
     
     public CardInventoryIndicator() {
@@ -22,40 +22,12 @@ public class CardInventoryIndicator : Entity {
         Depth = -13001;
     }
 
-    public override void Awake(Scene scene) {
-        base.Awake(scene);
-        
-        var player = Scene.Tracker.GetEntity<Player>();
-        
-        if (player == null)
-            return;
-        
-        var cardInventory = player.ExtData().CardInventory;
-        
-        previousCardType = cardInventory.CardType;
-        previousCardCount = cardInventory.CardCount;
-    }
-
     public override void Update() {
         base.Update();
-
         animTimer += Engine.DeltaTime;
 
         if (animTimer > ANIM_DURATION)
             animTimer = ANIM_DURATION;
-        
-        var player = Scene.Tracker.GetEntity<Player>();
-        
-        if (player == null)
-            return;
-        
-        var cardInventory = player.ExtData().CardInventory;
-
-        if (cardInventory.CardType != previousCardType || cardInventory.CardCount > previousCardCount)
-            animTimer = 0f;
-
-        previousCardType = cardInventory.CardType;
-        previousCardCount = cardInventory.CardCount;
     }
 
     public override void Render() {
@@ -66,17 +38,15 @@ public class CardInventoryIndicator : Entity {
         if (player == null)
             return;
 
-        var cardInventory = player.ExtData().CardInventory;
-        
-        if (cardInventory.CardCount == 0)
+        if (cardCount == 0)
             return;
 
         var position = player.Position + OFFSET;
 
-        if (cardInventory.CardCount == 3)
+        if (cardCount == 3)
             position.X++;
         
-        var color = cardInventory.CardType switch {
+        var color = cardType switch {
             AbilityCardType.Yellow => Color.Yellow,
             AbilityCardType.Blue => Color.Blue,
             AbilityCardType.Green => Color.Green,
@@ -87,7 +57,7 @@ public class CardInventoryIndicator : Entity {
 
         float anim = animTimer / ANIM_DURATION;
         
-        for (int i = cardInventory.CardCount - 1; i >= 0; i--) {
+        for (int i = cardCount - 1; i >= 0; i--) {
             var drawPosition = position - i * Vector2.One;
             var drawColor = Color.White;
         
@@ -99,7 +69,7 @@ public class CardInventoryIndicator : Entity {
             outline.DrawJustified(drawPosition, new Vector2(0.5f, 1f), drawColor);
         }
 
-        for (int i = cardInventory.CardCount - 1; i >= 0; i--) {
+        for (int i = cardCount - 1; i >= 0; i--) {
             var drawPosition = position - i * Vector2.One;
             var drawColor = color;
 
@@ -114,4 +84,13 @@ public class CardInventoryIndicator : Entity {
             texture.DrawJustified(drawPosition, new Vector2(0.5f, 1f), drawColor);
         }
     }
+
+    public void UpdateInventory(AbilityCardType cardType, int cardCount) {
+        this.cardType = cardType;
+        this.cardCount = cardCount;
+    }
+
+    public void PlayAnimation() => animTimer = 0f;
+
+    public void StopAnimation() => animTimer = ANIM_DURATION;
 }
