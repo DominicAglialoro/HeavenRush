@@ -696,7 +696,6 @@ public static class PlayerExtensions {
         extData.GreenDiveIndex = stateMachine.AddState(player.GreenDiveUpdate);
         extData.RedBoostDashIndex = stateMachine.AddState(null, player.RedBoostDashCoroutine);
         extData.WhiteDashIndex = stateMachine.AddState(null, player.WhiteDashCoroutine, null, player.WhiteDashEnd);
-        Input.Grab.BufferTime = 0f;
     }
 
     private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) => player.Active && canRetry(player);
@@ -1035,7 +1034,7 @@ public static class PlayerExtensions {
         }
     }
 
-    public class Data {
+    private class Data {
         public int BlueDashIndex;
         public int GreenDiveIndex;
         public int RedBoostDashIndex;

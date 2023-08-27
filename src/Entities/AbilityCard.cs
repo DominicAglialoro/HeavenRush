@@ -41,7 +41,7 @@ public class AbilityCard : Entity {
         flash.Color = Color.White * 0.5f;
         flash.CenterOrigin();
         
-        Add(new VertexLight(Color.Lerp(color, Color.White, 0.75f), 1f, 16, 48));
+        Add(new VertexLight(Color.Lerp(color, Color.White, 0.5f), 1f, 16, 48));
         
         Add(sine = new SineWave(0.6f));
         sine.Randomize();

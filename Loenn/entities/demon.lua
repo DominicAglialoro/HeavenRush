@@ -7,18 +7,14 @@ demon.placements = {
 		name = "grounded",
 		data = {
 			grounded = true,
-			restoresDash = true,
-			hasCard = false,
-			cardType = "Yellow"
+			restoresDash = true
 		}
 	},
 	{
 		name = "aerial",
 		data = {
 			grounded = false,
-			restoresDash = true,
-			hasCard = false,
-			cardType = "Yellow"
+			restoresDash = true
 		}
 	}
 }

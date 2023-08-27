@@ -196,12 +196,7 @@ public class RushLevelController : Entity {
             session.Deaths++;
             session.DeathsInCurrentLevel++;
             SaveData.Instance.AddDeath(session.Area);
-            
-            foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-                player.RemoveSelf();
-            
-            level.Reload();
-            level.Wipe.Cancel();
+            ReloadLevel(false);
         };
 
         Active = false;
@@ -212,41 +207,46 @@ public class RushLevelController : Entity {
     private void CompleteBegin() => overlayUi.ShowComplete(Time, BestTime, BerryObjectiveTime, newBest);
 
     private int CompleteUpdate() {
-        if (Input.MenuConfirm.Pressed) {
-            level.DoScreenWipe(false, () => {
-                foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-                    player.RemoveSelf();
-                
-                var session = level.Session;
-                var levels = session.MapData.Levels;
-                int index = levels.IndexOf(session.LevelData) + 1;
-
-                if (index >= levels.Count) {
-                    level.Reload();
-                    
-                    return;
-                }
-
-                level.UnloadLevel();
-                session.Level = levels[index].Name;
-                session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-                level.LoadLevel(Player.IntroTypes.Respawn);
-            });
-        }
-        else if (Input.MenuCancel.Pressed) {
-            level.DoScreenWipe(false, () => {
-                foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-                    player.RemoveSelf();
-                
-                level.Reload();
-            });
-        }
+        if (Input.MenuConfirm.Pressed)
+            level.DoScreenWipe(false, LoadNextLevel);
+        else if (Input.MenuCancel.Pressed)
+            level.DoScreenWipe(false, () => ReloadLevel(true));
         else
             return COMPLETE;
 
         Active = false;
 
         return COMPLETE;
+    }
+
+    private void LoadNextLevel() {
+        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+            player.RemoveSelf();
+                
+        var session = level.Session;
+        var levels = session.MapData.Levels;
+        int index = levels.IndexOf(session.LevelData) + 1;
+
+        if (index >= levels.Count) {
+            level.Reload();
+                    
+            return;
+        }
+
+        level.UnloadLevel();
+        session.Level = levels[index].Name;
+        session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
+        level.LoadLevel(Player.IntroTypes.Respawn);
+    }
+
+    private void ReloadLevel(bool wipe) {
+        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+            player.RemoveSelf();
+
+        level.Reload();
+        
+        if (!wipe)
+            level.Wipe.Cancel();
     }
 
     private void CompleteEnd() => overlayUi.Hide();

@@ -32,6 +32,7 @@ public class SurfPlatform : Solid {
     }
 
     public override void Render() {
+        Draw.Rect(X, Y + 6, Width, 2f, Water.FillColor);
         GameplayRenderer.End();
         waterSurface.Render(level.Camera);
         GameplayRenderer.Begin();

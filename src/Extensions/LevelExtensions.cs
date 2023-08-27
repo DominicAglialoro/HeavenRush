@@ -1,9 +1,7 @@
 namespace Celeste.Mod.HeavenRush; 
 
 public static class LevelExtensions {
-    public static void Load() {
-        On.Celeste.Level.LoadCustomEntity += Level_LoadCustomEntity;
-    }
+    public static void Load() => On.Celeste.Level.LoadCustomEntity += Level_LoadCustomEntity;
 
     private static bool Level_LoadCustomEntity(On.Celeste.Level.orig_LoadCustomEntity loadCustomEntity, EntityData entityData, Level level) {
         if (!loadCustomEntity(entityData, level))
@@ -17,7 +15,5 @@ public static class LevelExtensions {
         return true;
     }
 
-    public static void Unload() {
-        On.Celeste.Level.LoadCustomEntity -= Level_LoadCustomEntity;
-    }
+    public static void Unload() => On.Celeste.Level.LoadCustomEntity -= Level_LoadCustomEntity;
 }

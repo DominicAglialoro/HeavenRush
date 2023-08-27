@@ -121,6 +121,7 @@ public class Demon : Entity {
         Add(sine = new SineWave(0.6f));
         sine.Randomize();
         
+        Add(new VertexLight(Color.White, 1f, 32, 64));
         Add(new PlayerCollider(OnPlayer));
 
         lastPlayerPosition = Position;
