@@ -10,8 +10,8 @@ public class SurfPlatform : Solid {
     private Water.Surface waterSurface;
     private Level level;
 
-    public SurfPlatform(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, 8f, false) {
-        waterSurface = new Water.Surface(Position + new Vector2(0.5f * Width, 6f), -Vector2.UnitY, Width, 0f);
+    public SurfPlatform(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
+        waterSurface = new Water.Surface(Position + new Vector2(0.5f * Width, 6f), -Vector2.UnitY, Width, Height);
         waterSurface.Rays.Clear();
         SurfaceSoundIndex = 0;
     }
@@ -32,7 +32,7 @@ public class SurfPlatform : Solid {
     }
 
     public override void Render() {
-        Draw.Rect(X, Y + 6, Width, 2f, Water.FillColor);
+        Draw.Rect(X, Y + 6f, Width, Height - 6f, Water.FillColor);
         GameplayRenderer.End();
         waterSurface.Render(level.Camera);
         GameplayRenderer.Begin();

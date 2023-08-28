@@ -1,38 +1,19 @@
-local drawableSpriteStruct = require("structs.drawable_sprite")
+local xnaColors = require("consts.xna_colors")
+local lightBlue = xnaColors.LightBlue
+
 local surfPlatform = {}
 
 surfPlatform.name = "heavenRush/surfPlatform"
-surfPlatform.depth = 0
-surfPlatform.canResize = { true, false }
+surfPlatform.fillColor = {lightBlue[1] * 0.3, lightBlue[2] * 0.3, lightBlue[3] * 0.3, 0.6}
+surfPlatform.borderColor = {lightBlue[1] * 0.8, lightBlue[2] * 0.8, lightBlue[3] * 0.8, 0.8}
 surfPlatform.placements = {
 	name = "platform",
 	data = {
-		width = 8
+		width = 8,
+		height = 8
 	}
 }
 
-function surfPlatform.sprite(room, entity)
-    local texture = "loenn/heavenRush/surfPlatform"
-	
-	local x, y = entity.x or 0, entity.y or 0
-    local width = entity.width or 8
-
-    local startX, startY = math.floor(x / 8) + 1, math.floor(y / 8) + 1
-    local stopX = startX + math.floor(width / 8) - 1
-    local len = stopX - startX
-
-    local sprites = {}
-
-    for i = 0, len do
-        local sprite = drawableSpriteStruct.fromTexture(texture, entity)
-
-        sprite:setJustification(0, 0)
-        sprite:addPosition(i * 8, 0)
-
-        table.insert(sprites, sprite)
-    end
-	
-	return sprites
-end
+surfPlatform.depth = 0
 
 return surfPlatform
