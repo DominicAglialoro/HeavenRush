@@ -52,11 +52,11 @@ public static class PlayerExtensions {
         Color = Color.Aquamarine,
         ColorMode = ParticleType.ColorModes.Static,
         FadeMode = ParticleType.FadeModes.Late,
-        LifeMin = 0.03f,
-        LifeMax = 0.06f,
+        LifeMin = 0.016f,
+        LifeMax = 0.033f,
         Size = 1f,
-        SpeedMin = 60f,
-        SpeedMax = 120f,
+        SpeedMin = 200f,
+        SpeedMax = 250f,
         DirectionRange = 0.7f
     };
 
@@ -755,11 +755,11 @@ public static class PlayerExtensions {
 
         if (extData.Surfing && dynamicData.Get<bool>("onGround") && Math.Abs(player.Speed.X) > 64f) {
             float interval = 0.008f / Math.Min(Math.Abs(player.Speed.X) / GROUND_BOOST_SPEED, 1f);
-            var offset = -4f * Math.Sign(player.Speed.X) * Vector2.UnitX;
-            float angle = player.Speed.X > 0f ? MathHelper.Pi + 0.4f : -0.4f;
+            var offset = new Vector2(-4f * Math.Sign(player.Speed.X), -2f);
+            float angle = -MathHelper.PiOver2 - 0.4f * Math.Sign(player.Speed.X);
 
             foreach (var position in Util.TemporalLerp(ref extData.SurfParticleTimer, interval, player.PreviousPosition, player.Position, Engine.DeltaTime))
-                level.ParticlesBG.Emit(SURF_PARTICLE, position + offset, angle);
+                level.ParticlesBG.Emit(SURF_PARTICLE, 1, position + offset, 2f * Vector2.One, angle);
         }
         else
             extData.SurfParticleTimer = 0f;
@@ -771,7 +771,7 @@ public static class PlayerExtensions {
         
         if (extData.RedBoostTimer > 0f && player.Speed.Length() > 64f) {
             float interval = 0.008f / Math.Min(Math.Abs(player.Speed.Length()) / RED_BOOST_DASH_SPEED.X, 1f);
-            var offset = -6f * Vector2.UnitY;
+            var offset = -8f * Vector2.UnitY;
             
             foreach (var position in Util.TemporalLerp(ref extData.RedBoostParticleTimer, interval, player.PreviousPosition, player.Position, Engine.DeltaTime))
                 level.ParticlesBG.Emit(RED_BOOST_PARTICLE, 1, position + offset, 6f * Vector2.One);
