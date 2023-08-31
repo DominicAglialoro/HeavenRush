@@ -11,7 +11,7 @@ public class SurfPlatform : Solid {
     private Level level;
 
     public SurfPlatform(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
-        waterSurface = new DynamicWaterSurface(Position - Vector2.UnitY, (int) Width, 9, 360f, 1300f, 1.25f);
+        waterSurface = new DynamicWaterSurface(Position - Vector2.UnitY, (int) Width, 5, 360f, 1300f, 1.25f);
         SurfaceSoundIndex = 0;
     }
 
@@ -34,7 +34,7 @@ public class SurfPlatform : Solid {
     }
 
     public override void Render() {
-        base.Render();
+        Draw.Rect(X, Y + 4f, Width, Height - 4f, Water.FillColor);
         GameplayRenderer.End();
         waterSurface.Render(level.Camera);
         GameplayRenderer.Begin();
