@@ -1,10 +1,9 @@
-using System;
 using Celeste.Mod.Backdrops;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 
-namespace Celeste.Mod.HeavenRush.Effects; 
+namespace Celeste.Mod.HeavenRush; 
 
 [CustomBackdrop("heavenRush/waterPlane")]
 public class WaterPlane : Parallax {
