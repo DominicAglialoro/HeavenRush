@@ -1,6 +1,7 @@
 {8c70d56b-f375-45d1-90b0-825dfeb9157e} event:/heavenRush/game/blue_dash
 {4dfdc5e0-242d-4919-b01e-fd8ce816ccf4} event:/heavenRush/game/red_boost_dash
 {f7106ed8-9427-4de2-88fe-4c2f8927849d} event:/heavenRush/game/red_boost_sustain
+{9f71c3bc-88b1-44a0-ad53-873f822f4c12} event:/heavenRush/game/surf
 
 {ae3a56df-af3e-46a2-94e1-f50a54a521e2} event:/heavenRush/music/machine_girl_virtual_paradise
 

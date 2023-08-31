@@ -64,7 +64,7 @@ public class Demon : Entity {
             var demon = (Demon) entity;
             float angle = (demon.Center - center).Angle();
             
-            demon.Die(demon.CollideCheck<Player>());
+            demon.Die(false);
             demon.Add(new Coroutine(Util.AfterFrame(() => demon.SpawnKillParticles(angle))));
             killedCount++;
         }

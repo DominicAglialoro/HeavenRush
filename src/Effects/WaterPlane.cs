@@ -47,15 +47,20 @@ public class WaterPlane : Backdrop {
         var end = (new Vector2(Position.X * nearScrollMult, nearY) - cameraPosition * Scroll * nearScrollMult).Floor();
         
         Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, start.Y), null, Color, 0f, Vector2.Zero, new Vector2(1f, (end.Y - start.Y) / texture.Height), SpriteEffects.None, 0);
-
+        Draw.SpriteBatch.End();
+        Draw.SpriteBatch.Begin();
+        
         for (int i = 0; i < points.Length; i++) {
             var point = points[i];
             var projectedPosition = new Vector2(point.X, 0f) + Vector2.Lerp(start, end, point.Y);
             float width = MathHelper.Lerp(8f, 20f, point.Y);
 
             projectedPosition.X += Speed.X * pointSpeedMults[i] * MathHelper.Lerp(1f, nearScrollMult, point.Y) * time;
-            projectedPosition.X = (projectedPosition.X % 360f + 360f) % 360f - 20f;
-            Draw.Line(projectedPosition - width * Vector2.UnitX, projectedPosition + width * Vector2.UnitX, (Color.White * MathHelper.Lerp(farPointAlpha, nearPointAlpha, point.Y)) with { A = 0 });
+            projectedPosition.X = (projectedPosition.X % 360f + 360f) % 360f - 20f - width;
+            Draw.Rect(projectedPosition, width * 2f, 1f, (Color.White * MathHelper.Lerp(farPointAlpha, nearPointAlpha, point.Y)) with { A = 0 });
         }
+        
+        Draw.SpriteBatch.End();
+        Draw.SpriteBatch.Begin();
     }
 }

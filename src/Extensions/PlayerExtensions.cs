@@ -133,7 +133,11 @@ public static class PlayerExtensions {
 
         int state = player.StateMachine.State;
         
-        if (!player.DashAttacking && extData.RedBoostTimer == 0f && state != extData.BlueDashIndex && state != extData.WhiteDashIndex)
+        if (!player.DashAttacking
+            && extData.RedBoostTimer == 0f
+            && state != extData.BlueDashIndex
+            && state != extData.GreenDiveIndex
+            && state != extData.WhiteDashIndex)
             return false;
 
         if (state == extData.BlueDashIndex)
@@ -554,8 +558,12 @@ public static class PlayerExtensions {
 
         bool check = player.CollideCheck<SurfPlatform>(player.Position + Vector2.UnitY);
 
-        if (check && !extData.Surfing)
+        if (check && !extData.Surfing) {
             Audio.Play(SFX.char_mad_water_in);
+            extData.SurfSoundSource.Play("event:/heavenRush/game/surf", "fade", MathHelper.Min(Math.Abs(player.Speed.X) / GROUND_BOOST_SPEED, 1f));
+        }
+        else if (!check && extData.SurfSoundSource.Playing)
+            extData.SurfSoundSource.Stop();
 
         extData.Surfing = check;
         
@@ -689,6 +697,7 @@ public static class PlayerExtensions {
         
         player.Add(extData.RedBoostSoundSource = new SoundSource());
         player.Add(extData.WhiteDashSoundSource = new SoundSource());
+        player.Add(extData.SurfSoundSource = new SoundSource());
 
         var stateMachine = player.StateMachine;
 
@@ -781,6 +790,9 @@ public static class PlayerExtensions {
         
         if (extData.RedBoostStoredSpeedTimer == 0f)
             extData.RedBoostStoredSpeed = 0f;
+
+        if (extData.SurfSoundSource.Playing)
+            extData.SurfSoundSource.Param("fade", MathHelper.Min(Math.Abs(player.Speed.X) / GROUND_BOOST_SPEED, 1f));
     }
     
     private static void Player_orig_Update_il(ILContext il) {
@@ -1054,5 +1066,6 @@ public static class PlayerExtensions {
         public float CustomTrailTimer;
         public bool Surfing;
         public float SurfParticleTimer;
+        public SoundSource SurfSoundSource;
     }
 }
