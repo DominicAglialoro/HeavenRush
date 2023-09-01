@@ -9,31 +9,54 @@ namespace Celeste.Mod.HeavenRush;
 [CustomBackdrop("heavenRush/waterPlane")]
 public class WaterPlane : Backdrop {
     private MTexture texture;
-    private Vector2[] points;
-    private float[] pointSpeedMults;
-    private float nearY;
-    private float nearScrollMult;
-    private float farPointAlpha;
-    private float nearPointAlpha;
+    private Wave[] waves;
+    private int nearY;
+    private int farY;
+    private float nearScrollY;
+    private float farScrollY;
     private float time;
 
     public WaterPlane(BinaryPacker.Element data) {
         texture = GFX.Game[data.Attr("texture")];
-        nearY = data.AttrFloat("nearY");
-        nearScrollMult = data.AttrFloat("nearScrollMult");
-        farPointAlpha = data.AttrFloat("farPointAlpha");
-        nearPointAlpha = data.AttrFloat("nearPointAlpha");
-        points = new Vector2[(int) data.AttrFloat("pointCount")];
+        nearY = data.AttrInt("nearY");
+        farY = data.AttrInt("farY");
+        nearScrollY = data.AttrFloat("nearScrollY");
+        farScrollY = data.AttrFloat("farScrollY");
 
-        for (int i = 0; i < points.Length; i++) {
-            points[i] = Calc.Random.Range(Vector2.Zero, new Vector2(360f, 1f));
-            points[i].Y *= points[i].Y;
+        float waveNearDensity = data.AttrFloat("waveNearDensity");
+        float waveFarDensity = data.AttrFloat("waveFarDensity");
+        float waveNearScroll = data.AttrFloat("waveNearScroll");
+        float waveFarScroll = data.AttrFloat("waveFarScroll");
+        float waveNearSpeed = data.AttrFloat("waveNearSpeed");
+        float waveFarSpeed = data.AttrFloat("waveFarSpeed");
+        int waveNearWidth = data.AttrInt("waveNearWidth");
+        int waveFarWidth = data.AttrInt("waveFarWidth");
+        var waveNearColor = Calc.HexToColor(data.Attr("waveNearColor")) with { A = 0 };
+        var waveFarColor = Calc.HexToColor(data.Attr("waveFarColor")) with { A = 0 };
+
+        bool flat = Math.Abs(waveFarDensity - waveNearDensity) < 0.001f;
+        float a = (waveFarDensity + waveNearDensity) * (waveFarDensity - waveNearDensity);
+        float b = waveNearDensity * waveNearDensity;
+        float c = flat ? 1f : 1f / (waveFarDensity - waveNearDensity);
+
+        waves = new Wave[(int) (waveNearDensity + waveFarDensity) / 2];
+
+        for (int i = 0; i < waves.Length; i++) {
+            float rand = Calc.Random.NextFloat();
+            float depth;
+
+            if (flat)
+                depth = rand;
+            else
+                depth = MathHelper.Clamp(((float) Math.Sqrt(a * rand + b) - waveNearDensity) * c, 0f, 1f);
+
+            float scroll = MathHelper.Lerp(waveNearScroll, waveFarScroll, depth);
+            float speed = MathHelper.Lerp(waveNearSpeed, waveFarSpeed, depth);
+            int width = (int) Math.Round(MathHelper.Lerp(waveNearWidth, waveFarWidth, depth));
+            var color = Color.Lerp(waveNearColor, waveFarColor, depth);
+
+            waves[i] = new Wave(depth, Calc.Random.Range(0f, 320f + width), scroll, speed, width, color);
         }
-
-        pointSpeedMults = new float[points.Length];
-
-        for (int i = 0; i < pointSpeedMults.Length; i++)
-            pointSpeedMults[i] = Calc.Random.Range(0.5f, 1.5f);
     }
 
     public override void Update(Scene scene) {
@@ -42,25 +65,42 @@ public class WaterPlane : Backdrop {
     }
 
     public override void Render(Scene scene) {
-        var cameraPosition = ((Level) scene).Camera.Position.Floor();
-        var start = (Position - cameraPosition * Scroll).Floor();
-        var end = (new Vector2(Position.X * nearScrollMult, nearY) - cameraPosition * Scroll * nearScrollMult).Floor();
+        var cameraPosition = ((Level) scene).Camera.Position;
+
+        float startY = farY - cameraPosition.Y * farScrollY;
+        float endY = nearY - cameraPosition.Y * nearScrollY;
         
-        Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, start.Y), null, Color, 0f, Vector2.Zero, new Vector2(1f, (end.Y - start.Y) / texture.Height), SpriteEffects.None, 0);
+        Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, startY), null, Color, 0f, Vector2.Zero, new Vector2(1f, (endY - startY) / texture.Height), SpriteEffects.None, 0);
         Draw.SpriteBatch.End();
         Draw.SpriteBatch.Begin();
         
-        for (int i = 0; i < points.Length; i++) {
-            var point = points[i];
-            var projectedPosition = new Vector2(point.X, 0f) + Vector2.Lerp(start, end, point.Y);
-            float width = MathHelper.Lerp(8f, 20f, point.Y);
+        foreach (var wave in waves) {
+            var projectedPosition = new Vector2(wave.XOffset - cameraPosition.X * wave.Scroll + wave.Speed * time, MathHelper.Lerp(endY, startY, wave.Depth));
+            float range = 320f + wave.Width;
 
-            projectedPosition.X += Speed.X * pointSpeedMults[i] * MathHelper.Lerp(1f, nearScrollMult, point.Y) * time;
-            projectedPosition.X = (projectedPosition.X % 360f + 360f) % 360f - 20f - width;
-            Draw.Rect(projectedPosition, width * 2f, 1f, (Color.White * MathHelper.Lerp(farPointAlpha, nearPointAlpha, point.Y)) with { A = 0 });
+            projectedPosition.X = (projectedPosition.X % range + range) % range - wave.Width;
+            Draw.Rect(projectedPosition, wave.Width, 1f, wave.Color);
         }
         
         Draw.SpriteBatch.End();
         Draw.SpriteBatch.Begin();
+    }
+
+    private struct Wave {
+        public readonly float Depth;
+        public readonly float XOffset;
+        public readonly float Scroll;
+        public readonly float Speed;
+        public readonly float Width;
+        public readonly Color Color;
+
+        public Wave(float depth, float xOffset, float scroll, float speed, float width, Color color) {
+            Depth = depth;
+            XOffset = xOffset;
+            Speed = speed;
+            Scroll = scroll;
+            Color = color;
+            Width = width;
+        }
     }
 }
