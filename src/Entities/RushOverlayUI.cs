@@ -15,6 +15,7 @@ public class RushOverlayUI : Entity {
     private MTexture berryTexture;
     private bool showComplete;
     private string levelName;
+    private string levelNumber;
     private long completionTime;
     private long bestTime;
     private long berryTime;
@@ -56,6 +57,7 @@ public class RushOverlayUI : Entity {
             Text(font, ToTimeString(berryTime), right, new Vector2(1f, 0.5f), Vector2.One, completionTime <= berryTime ? Color.LimeGreen : Color.White);
         }
         else {
+            Text(ActiveFont.Font, levelNumber, SCREEN_CENTER - 240f * Vector2.UnitY, new Vector2(0.5f, 0.5f), 0.8f * Vector2.One);
             Text(ActiveFont.Font, levelName, SCREEN_CENTER - 120f * Vector2.UnitY, new Vector2(0.5f, 0.5f), 2f * Vector2.One);
             
             GetElementPositions(80f, out var left, out var right);
@@ -68,8 +70,9 @@ public class RushOverlayUI : Entity {
         }
     }
 
-    public void ShowStart(string levelName, long bestTime, long berryTime) {
+    public void ShowStart(string levelName, string levelNumber, long bestTime, long berryTime) {
         this.levelName = levelName;
+        this.levelNumber = levelNumber;
         this.bestTime = bestTime;
         this.berryTime = berryTime;
         Active = true;

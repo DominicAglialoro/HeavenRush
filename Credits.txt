@@ -1,5 +1,8 @@
 Flagpole1up
-	tilesets/Skytower.png
+	tilesets/Skytower
 	
 bryse0n
 	bgs/cloud_*
+
+kat
+	tilesets/bgMarble

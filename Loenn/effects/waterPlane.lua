@@ -19,6 +19,9 @@ waterPlane.fieldOrder = {
 	"waveFarWidth",
 	"waveNearColor",
 	"waveFarColor",
+	"waveSpeedRandom",
+	"waveWidthRandom",
+	"waveAlphaRandom",
 	"texture"
 }
 
@@ -30,7 +33,10 @@ waterPlane.fieldInformation = {
 	waveNearWidth = { fieldType = "integer", minimumValue = 1 },
 	waveFarWidth = { fieldType = "integer", minimumValue = 1 },
 	waveNearColor = { fieldType = "color" },
-	waveFarColor = { fieldType = "color" }
+	waveFarColor = { fieldType = "color" },
+	waveSpeedRandom = { minimumValue = 0, maximumValue = 1 },
+	waveWidthRandom = { minimumValue = 0, maximumValue = 1 },
+	waveAlphaRandom = { minimumValue = 0, maximumValue = 1 }
 }
 
 waterPlane.defaultData = {
@@ -48,6 +54,9 @@ waterPlane.defaultData = {
 	waveFarWidth = 1,
 	waveNearColor = "ffffff",
 	waveFarColor = "ffffff",
+	waveSpeedRandom = 0,
+	waveWidthRandom = 0,
+	waveAlphaRandom = 0,
 	texture = ""
 }
 

@@ -31,7 +31,7 @@ public static class PlayerExtensions {
     private const float WHITE_DASH_SPEED = 325f;
     private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
     private const float WHITE_DASH_SUPER_GRACE_PERIOD = 0.083f;
-    private const float GROUND_BOOST_FRICTION = 0.1f;
+    private const float GROUND_BOOST_FRICTION = 0.05f;
     private const float GROUND_BOOST_SPEED = 280f;
     private const float GROUND_BOOST_ACCELERATION = 650f;
 
@@ -78,6 +78,7 @@ public static class PlayerExtensions {
         IL.Celeste.Player.BeforeUpTransition += Player_BeforeUpTransition_il;
         On.Celeste.Player.Jump += Player_Jump;
         On.Celeste.Player.WallJump += Player_WallJump;
+        On.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
         On.Celeste.Player.IntroRespawnEnd += Player_IntroRespawnEnd;
@@ -135,6 +136,7 @@ public static class PlayerExtensions {
         
         if (!player.DashAttacking
             && extData.RedBoostTimer == 0f
+            && state != 2
             && state != extData.BlueDashIndex
             && state != extData.GreenDiveIndex
             && state != extData.WhiteDashIndex)
@@ -554,7 +556,7 @@ public static class PlayerExtensions {
     }
     
     private static void BeforeBaseUpdate(Player player) {
-        player.GetData(out var dynamicData, out var extData);
+        player.GetData(out _, out var extData);
 
         bool check = player.CollideCheck<SurfPlatform>(player.Position + Vector2.UnitY);
 
@@ -566,11 +568,6 @@ public static class PlayerExtensions {
             extData.SurfSoundSource.Stop();
 
         extData.Surfing = check;
-        
-        int moveX = Input.MoveX.Value;
-        
-        if ((extData.RedBoostTimer > 0f || extData.Surfing) && dynamicData.Get<bool>("onGround") && !player.Ducking && moveX * player.Speed.X < GROUND_BOOST_SPEED)
-            player.Speed.X = Calc.Approach(player.Speed.X, moveX * GROUND_BOOST_SPEED, Engine.DeltaTime * GROUND_BOOST_ACCELERATION);
     }
 
     private static void OnTrueCollideH(Player player) {
@@ -968,6 +965,17 @@ public static class PlayerExtensions {
         dynamicData.Set("varJumpTimer", 0f);
     }
 
+    private static int Player_NormalUpdate(On.Celeste.Player.orig_NormalUpdate normalUpdate, Player player) {
+        player.GetData(out var dynamicData, out var extData);
+        
+        int moveX = Input.MoveX.Value;
+        
+        if ((extData.RedBoostTimer > 0f || extData.Surfing) && dynamicData.Get<bool>("onGround") && !player.Ducking && moveX * player.Speed.X < GROUND_BOOST_SPEED)
+            player.Speed.X = Calc.Approach(player.Speed.X, moveX * GROUND_BOOST_SPEED, Engine.DeltaTime * GROUND_BOOST_ACCELERATION);
+
+        return normalUpdate(player);
+    }
+
     private static void Player_NormalUpdate_il(ILContext il) {
         var cursor = new ILCursor(il);
         ILLabel label = null;
@@ -1018,6 +1026,9 @@ public static class PlayerExtensions {
     }
 
     private static void Player_DashBegin(On.Celeste.Player.orig_DashBegin dashBegin, Player player) {
+        foreach (var entity in player.CollideAll<Demon>())
+            ((Demon) entity).OnPlayer(player);
+
         dashBegin(player);
         player.GetData(out _, out var extData);
         extData.BlueDashHyperGraceTimer = 0f;

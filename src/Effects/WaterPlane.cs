@@ -33,6 +33,9 @@ public class WaterPlane : Backdrop {
         int waveFarWidth = data.AttrInt("waveFarWidth");
         var waveNearColor = Calc.HexToColor(data.Attr("waveNearColor")) with { A = 0 };
         var waveFarColor = Calc.HexToColor(data.Attr("waveFarColor")) with { A = 0 };
+        float waveSpeedRandom = data.AttrFloat("waveSpeedRandom");
+        float waveWidthRandom = data.AttrFloat("waveWidthRandom");
+        float waveAlphaRandom = data.AttrFloat("waveAlphaRandom");
 
         bool flat = Math.Abs(waveFarDensity - waveNearDensity) < 0.001f;
         float a = (waveFarDensity + waveNearDensity) * (waveFarDensity - waveNearDensity);
@@ -43,17 +46,12 @@ public class WaterPlane : Backdrop {
 
         for (int i = 0; i < waves.Length; i++) {
             float rand = Calc.Random.NextFloat();
-            float depth;
-
-            if (flat)
-                depth = rand;
-            else
-                depth = MathHelper.Clamp(((float) Math.Sqrt(a * rand + b) - waveNearDensity) * c, 0f, 1f);
+            float depth = flat ? rand : MathHelper.Clamp(((float) Math.Sqrt(a * rand + b) - waveNearDensity) * c, 0f, 1f);
 
             float scroll = MathHelper.Lerp(waveNearScroll, waveFarScroll, depth);
-            float speed = MathHelper.Lerp(waveNearSpeed, waveFarSpeed, depth);
-            int width = (int) Math.Round(MathHelper.Lerp(waveNearWidth, waveFarWidth, depth));
-            var color = Color.Lerp(waveNearColor, waveFarColor, depth);
+            float speed = MathHelper.Lerp(waveNearSpeed, waveFarSpeed, depth) * Calc.Random.Range(1f - waveSpeedRandom, 1f + waveSpeedRandom);
+            int width = (int) Math.Round(MathHelper.Lerp(waveNearWidth, waveFarWidth, depth) * Calc.Random.Range(1f - waveWidthRandom, 1f + waveWidthRandom));
+            var color = Color.Lerp(waveNearColor, waveFarColor, depth) * Calc.Random.Range(1f - waveAlphaRandom, 1f);
 
             waves[i] = new Wave(depth, Calc.Random.Range(0f, 320f + width), scroll, speed, width, color);
         }
@@ -65,10 +63,10 @@ public class WaterPlane : Backdrop {
     }
 
     public override void Render(Scene scene) {
-        var cameraPosition = ((Level) scene).Camera.Position;
+        var cameraPosition = ((Level) scene).Camera.Position.Floor();
 
-        float startY = farY - cameraPosition.Y * farScrollY;
-        float endY = nearY - cameraPosition.Y * nearScrollY;
+        float startY = farY - (int) (cameraPosition.Y * farScrollY);
+        float endY = nearY - (int) (cameraPosition.Y * nearScrollY);
         
         Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, startY), null, Color, 0f, Vector2.Zero, new Vector2(1f, (endY - startY) / texture.Height), SpriteEffects.None, 0);
         Draw.SpriteBatch.End();

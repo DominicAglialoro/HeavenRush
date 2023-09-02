@@ -16,8 +16,7 @@ public class RushGoal : Entity {
     
     public RushGoal(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(16f, 24f, -8f, -24f);
-        Depth = -100;
-        Collidable = false;
+        Depth = 100;
         
         var outline = new Image(GFX.Game["objects/heavenRush/rushGoal/outline"]);
         
@@ -27,7 +26,6 @@ public class RushGoal : Entity {
         Add(back = new Image(GFX.Game["objects/heavenRush/rushGoal/back"]));
         back.Color = (Color.White * 0.25f) with { A = 0 };
         back.JustifyOrigin(0.5f, 1f);
-        back.Visible = false;
 
         Add(crystal = new Sprite(GFX.Game, "objects/heavenRush/rushGoal/crystal"));
         crystal.AddLoop("crystal", "", 0.5f);
@@ -39,7 +37,6 @@ public class RushGoal : Entity {
         effect.Play("effect");
         effect.Color = (Color.White * 0.5f) with { A = 0 };
         effect.JustifyOrigin(0.5f, 1f);
-        effect.Visible = false;
         
         Add(sine = new SineWave(0.3f));
         sine.Randomize();
@@ -61,12 +58,20 @@ public class RushGoal : Entity {
         base.Awake(scene);
         levelController = Scene.Tracker.GetEntity<RushLevelController>();
         levelController.DemonKilled += OnDemonKilled;
+
+        if (Scene.Tracker.CountEntities<Demon>() == 0)
+            return;
+        
+        Collidable = false;
+        back.Visible = false;
+        effect.Visible = false;
     }
+    
     private void OnPlayer(Player player) {
         Collidable = false;
         light.Alpha = 1f;
         Audio.Play(SFX.game_07_checkpointconfetti, Position);
-        levelController.GoalReached();
+        levelController.ClearLevel();
     }
 
     private void OnDemonKilled() {

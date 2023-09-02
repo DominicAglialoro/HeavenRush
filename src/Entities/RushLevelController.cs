@@ -16,6 +16,8 @@ public class RushLevelController : Entity {
     
     public string LevelName { get; }
     
+    public string LevelNumber { get; }
+    
     public bool RequireKillAllDemons { get; }
     
     public long BestTime { get; private set; }
@@ -39,6 +41,7 @@ public class RushLevelController : Entity {
 
     public RushLevelController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LevelName = data.Attr("levelName");
+        LevelNumber = data.Attr("levelNumber");
         RequireKillAllDemons = data.Bool("requireKillAllDemons");
         BerryObjectiveTime = 10000 * data.Int("berryObjectiveTime");
         
@@ -80,12 +83,12 @@ public class RushLevelController : Entity {
         DemonKilled?.Invoke();
     }
 
-    public void GoalReached() {
+    public void ClearLevel() {
         level.Frozen = true;
 
         if (BestTime < 0 || Time < BestTime) {
-            BestTime = Time;
-            HeavenRushModule.SaveData.BestTimes[level.Session.Level] = Time;
+            // BestTime = Time;
+            // HeavenRushModule.SaveData.BestTimes[level.Session.Level] = Time;
             newBest = true;
         }
         else
@@ -100,7 +103,7 @@ public class RushLevelController : Entity {
 
     private int InitUpdate() => AWAITING_RESPAWN;
 
-    private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, BestTime, BerryObjectiveTime);
+    private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, LevelNumber, BestTime, BerryObjectiveTime);
 
     private int AwaitingRespawnUpdate() {
         var player = Scene.Tracker.GetEntity<Player>();

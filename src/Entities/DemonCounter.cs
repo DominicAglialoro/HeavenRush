@@ -20,10 +20,13 @@ public class DemonCounter : Entity {
         Tag = Tags.HUD;
     }
 
-    public override void Added(Scene scene) {
+    public override void Awake(Scene scene) {
         level = (Level) scene;
         levelController = level.Tracker.GetEntity<RushLevelController>();
         levelController.DemonKilled += OnDemonKilled;
+
+        if (scene.Tracker.CountEntities<Demon>() == 0)
+            exitAnim = EXIT_ANIM_DURATION;
     }
 
     public override void Update() {

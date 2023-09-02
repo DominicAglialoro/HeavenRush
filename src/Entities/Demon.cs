@@ -138,7 +138,7 @@ public class Demon : Entity {
         UpdateVisual();
     }
 
-    private void OnPlayer(Player player) {
+    public void OnPlayer(Player player) {
         if (alive && player.HitDemon()) {
             Celeste.Freeze(0.016f);
             Audio.Play(SFX.game_09_iceball_break, Center);
@@ -157,7 +157,7 @@ public class Demon : Entity {
             Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(1);
         }
         
-        if (!alive && restoresDash && player.RefillDash())
+        if (Collidable && !alive && restoresDash && player.RefillDash())
             Collidable = false;
     }
 
