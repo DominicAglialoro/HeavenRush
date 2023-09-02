@@ -13,6 +13,7 @@ public class SurfPlatform : Solid {
     public SurfPlatform(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, true) {
         waterSurface = new DynamicWaterSurface(Position - Vector2.UnitY, (int) Width, 5, 360f, 1300f, 1.25f);
         SurfaceSoundIndex = 0;
+        Depth = -9999;
     }
 
     public override void Added(Scene scene) {

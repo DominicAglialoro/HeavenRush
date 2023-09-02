@@ -14,6 +14,6 @@ surfPlatform.placements = {
 	}
 }
 
-surfPlatform.depth = 0
+surfPlatform.depth = -9999
 
 return surfPlatform
