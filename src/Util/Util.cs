@@ -23,27 +23,6 @@ public static class Util {
     
     public static Vector2 PreserveArea(Vector2 vec, float area = 1f) => area / (vec.X * vec.Y) * vec;
 
-    public static IEnumerable<Vector2> TemporalLerp(ref float timer, float interval, Vector2 fromPosition, Vector2 toPosition, float deltaTime) {
-        timer = timer % interval + deltaTime;
-
-        if (timer < interval)
-            return new Vector2[0];
-
-        var enumerable = Enumerate(timer, interval, fromPosition, toPosition, deltaTime);
-
-        timer %= interval;
-
-        return enumerable;
-        
-        IEnumerable<Vector2> Enumerate(float timer, float interval, Vector2 fromPosition, Vector2 toPosition, float deltaTime) {
-            while (timer >= interval) {
-                yield return Vector2.Lerp(toPosition, fromPosition, timer / deltaTime);
-
-                timer -= interval;
-            }
-        }
-    }
-
     public static IEnumerator NextFrame(Action action) {
         action();
         

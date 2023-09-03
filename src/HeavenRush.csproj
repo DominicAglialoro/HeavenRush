@@ -18,10 +18,6 @@
             <HintPath>$(CelesteLibsPath)\Celeste.exe</HintPath>
             <Private>false</Private>
         </Reference>
-        <Reference Include="ExtendedVariantMode">
-            <HintPath>$(CelesteLibsPath)\ExtendedVariantMode.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
         <Reference Include="FNA">
             <HintPath>$(CelesteLibsPath)\FNA.dll</HintPath>
             <Private>false</Private>

@@ -28,6 +28,8 @@ public class RushLevelController : Entity {
     
     public int DemonCount { get; private set; }
 
+    public bool CanRetry => stateMachine.State == GAMEPLAY;
+
     public event Action LevelCleared;
 
     public event Action DemonKilled;
@@ -193,6 +195,7 @@ public class RushLevelController : Entity {
         if (!HeavenRushModule.Settings.InstantRetry.Pressed)
             return GAMEPLAY;
 
+        level.Frozen = true;
         level.OnEndOfFrame += () => {
             var session = level.Session;
             

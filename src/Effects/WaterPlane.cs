@@ -68,7 +68,7 @@ public class WaterPlane : Backdrop {
         float startY = farY - (int) (cameraPosition.Y * farScrollY);
         float endY = nearY - (int) (cameraPosition.Y * nearScrollY);
         
-        Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, startY), null, Color, 0f, Vector2.Zero, new Vector2(1f, (endY - startY) / texture.Height), SpriteEffects.None, 0);
+        Draw.SpriteBatch.Draw(texture.Texture.Texture_Safe, new Vector2(0f, startY), null, Color.White);
         Draw.SpriteBatch.End();
         Draw.SpriteBatch.Begin();
         
