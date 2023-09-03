@@ -9,7 +9,8 @@ rushLevelController.placements = {
 		levelName = "",
 		levelNumber = "",
 		requireKillAllDemons = true,
-		berryObjectiveTime = 0
+		berryObjectiveTime = 0,
+		authorObjectiveTime = 0
 	}
 }
 

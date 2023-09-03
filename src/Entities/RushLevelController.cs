@@ -194,8 +194,8 @@ public class RushLevelController : Entity {
         
         if (!HeavenRushModule.Settings.InstantRetry.Pressed)
             return GAMEPLAY;
-
-        level.Frozen = true;
+        
+        RemovePlayer();
         level.OnEndOfFrame += () => {
             var session = level.Session;
             
@@ -225,9 +225,10 @@ public class RushLevelController : Entity {
         return COMPLETE;
     }
 
+    private void CompleteEnd() => overlayUi.Hide();
+
     private void LoadNextLevel() {
-        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-            player.RemoveSelf();
+        RemovePlayer();
                 
         var session = level.Session;
         var levels = session.MapData.Levels;
@@ -246,14 +247,18 @@ public class RushLevelController : Entity {
     }
 
     private void ReloadLevel(bool wipe) {
-        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-            player.RemoveSelf();
-
+        RemovePlayer();
         level.Reload();
         
         if (!wipe)
             level.Wipe.Cancel();
     }
 
-    private void CompleteEnd() => overlayUi.Hide();
+    private void RemovePlayer() {
+        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
+            player.RemoveSelf();
+
+        foreach (var deadBody in level.Tracker.GetEntitiesCopy<PlayerDeadBody>())
+            deadBody.RemoveSelf();
+    }
 }

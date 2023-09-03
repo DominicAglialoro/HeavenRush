@@ -589,9 +589,7 @@ public static class PlayerExtensions {
     }
     
     private static void BeforeBaseUpdate(Player player) {
-        bool check = player.CollideCheck<SurfPlatform>(player.Position + Vector2.UnitY);
-        
-        if (check) {
+        if (player.CollideCheck<SurfPlatform>(player.Position + Vector2.UnitY)) {
             player.GetOrCreateData(out _, out var extData);
 
             if (extData.Surfing)
