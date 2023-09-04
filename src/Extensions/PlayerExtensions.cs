@@ -104,6 +104,7 @@ public static class PlayerExtensions {
     public static void Spawn(this Player player) {
         player.Active = true;
         player.Visible = true;
+        player.Collidable = true;
         player.StateMachine.State = 14;
     }
 
@@ -114,11 +115,6 @@ public static class PlayerExtensions {
 
         if (!cardInventory.TryAddCard(cardType))
             return false;
-
-        extData.CardInventoryIndicator ??= player.Scene.Tracker.GetEntity<CardInventoryIndicator>();
-
-        if (extData.CardInventoryIndicator == null)
-            player.Scene.Add(extData.CardInventoryIndicator = new CardInventoryIndicator());
         
         extData.CardInventoryIndicator.UpdateInventory(cardInventory.CardType, cardInventory.CardCount);
         extData.CardInventoryIndicator.PlayAnimation();
@@ -164,6 +160,8 @@ public static class PlayerExtensions {
 
         extData = new Data();
         dynamicData.Set("heavenRushData", extData);
+        
+        player.Add(extData.CardInventoryIndicator = new CardInventoryIndicator());
         
         var level = (Level) player.Scene;
         
@@ -584,6 +582,7 @@ public static class PlayerExtensions {
         
         player.Active = false;
         player.Visible = false;
+        player.Collidable = false;
         
         return true;
     }

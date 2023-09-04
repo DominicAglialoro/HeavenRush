@@ -9,7 +9,9 @@ namespace Celeste.Mod.HeavenRush;
 [Tracked]
 public class RushOverlayUI : Entity {
     private static readonly Vector2 SCREEN_CENTER = new(960f, 540f);
-    private const float ANIM_DURATION = 0.7f;
+    private static readonly Vector2 SCREEN_BOTTOM_LEFT = new(0f, 1080f);
+    private const float TIME_ANIM_DURATION = 0.7f;
+    private const float FADE_ANIM_DURATION = 0.5f;
 
     private PixelFont font;
     private MTexture berryTexture;
@@ -20,8 +22,9 @@ public class RushOverlayUI : Entity {
     private long bestTime;
     private long berryTime;
     private bool newBest;
+    private int animPhase;
     private float timeAnim;
-    private bool animComplete;
+    private float fadeAnim;
 
     public RushOverlayUI() {
         Logger.Log(LogLevel.Warn, "", ActiveFont.BaseSize.ToString(CultureInfo.InvariantCulture));
@@ -43,30 +46,56 @@ public class RushOverlayUI : Entity {
             
             GetElementPositions(40f, out var left, out var right);
             Text(font, "Time:", left, new Vector2(0f, 0.5f), Vector2.One);
-            Text(font, GetTimeText(), right, new Vector2(1f, 0.5f), Vector2.One, newBest && animComplete ? Color.LimeGreen : Color.White);
+            Text(font, GetTimeText(), right, new Vector2(1f, 0.5f), Vector2.One, newBest && animPhase >= 1 ? Color.LimeGreen : Color.White);
             
-            if (!animComplete)
+            if (animPhase == 0)
                 return;
+
+            float fade = Ease.CubeOut(fadeAnim / FADE_ANIM_DURATION);
+            var offset = 80f * (1f - fade) * Vector2.UnitX;
             
             GetElementPositions(120f, out left, out right);
-            Text(font, "Best:", left, new Vector2(0f, 0.5f), Vector2.One);
-            Text(font, ToTimeString(bestTime), right, new Vector2(1f, 0.5f), Vector2.One, newBest ? Color.LimeGreen : Color.White);
+            Text(font, "Best:", left - offset, new Vector2(0f, 0.5f), Vector2.One, Color.White * fade);
+            Text(font, ToTimeString(bestTime), right - offset, new Vector2(1f, 0.5f), Vector2.One, (newBest ? Color.LimeGreen : Color.White) * fade);
             
             GetElementPositions(200f, out left, out right);
-            berryTexture.DrawJustified(left + 12f * Vector2.UnitX, new Vector2(0f, 0.5f));
-            Text(font, ToTimeString(berryTime), right, new Vector2(1f, 0.5f), Vector2.One, completionTime <= berryTime ? Color.LimeGreen : Color.White);
+            berryTexture.DrawJustified(left + 12f * Vector2.UnitX + offset, new Vector2(0f, 0.5f), Color.White * fade);
+            Text(font, ToTimeString(berryTime), right + offset, new Vector2(1f, 0.5f), Vector2.One, (completionTime <= berryTime ? Color.LimeGreen : Color.White) * fade);
+            
+            var confirmTexture = Input.GuiButton(Input.MenuConfirm, Input.PrefixMode.Latest);
+            var cancelTexture = Input.GuiButton(Input.MenuCancel, Input.PrefixMode.Latest);
+            
+            confirmTexture.DrawJustified(SCREEN_BOTTOM_LEFT + new Vector2(80f, -160f), new Vector2(0f, 0.5f), Color.White * fade);
+            cancelTexture.DrawJustified(SCREEN_BOTTOM_LEFT + new Vector2(80f, -80f), new Vector2(0f, 0.5f), Color.White * fade);
+            Text(ActiveFont.Font, "Continue", SCREEN_BOTTOM_LEFT + new Vector2(240f, -160f), new Vector2(0f, 0.5f), Vector2.One, Color.White * fade);
+            Text(ActiveFont.Font, "Retry", SCREEN_BOTTOM_LEFT + new Vector2(240f, -80f), new Vector2(0f, 0.5f), Vector2.One, Color.White * fade);
         }
         else {
             Text(ActiveFont.Font, levelNumber, SCREEN_CENTER - 240f * Vector2.UnitY, new Vector2(0.5f, 0.5f), 0.8f * Vector2.One);
             Text(ActiveFont.Font, levelName, SCREEN_CENTER - 120f * Vector2.UnitY, new Vector2(0.5f, 0.5f), 2f * Vector2.One);
-            
-            GetElementPositions(80f, out var left, out var right);
-            Text(font, "Best:", left, new Vector2(0f, 0.5f), Vector2.One);
-            Text(font, ToTimeString(bestTime), right, new Vector2(1f, 0.5f), Vector2.One);
 
-            GetElementPositions(160f, out left, out right);
+            Vector2 left;
+            Vector2 right;
+            float y = 80f;
+
+            if (bestTime >= 0) {
+                GetElementPositions(80f, out left, out right);
+                Text(font, "Best:", left, new Vector2(0f, 0.5f), Vector2.One);
+                Text(font, ToTimeString(bestTime), right, new Vector2(1f, 0.5f), Vector2.One);
+                y += 80f;
+            }
+
+            GetElementPositions(y, out left, out right);
             berryTexture.DrawJustified(left + 12f * Vector2.UnitX, new Vector2(0f, 0.5f));
             Text(font, ToTimeString(berryTime), right, new Vector2(1f, 0.5f), Vector2.One);
+
+            var confirmTexture = Input.GuiButton(Input.MenuConfirm, Input.PrefixMode.Latest);
+            var talkTexture = Input.GuiButton(Input.Talk, Input.PrefixMode.Latest);
+            
+            confirmTexture.DrawJustified(SCREEN_BOTTOM_LEFT + new Vector2(80f, -160f), new Vector2(0f, 0.5f));
+            talkTexture.DrawJustified(SCREEN_BOTTOM_LEFT + new Vector2(80f, -80f), new Vector2(0f, 0.5f));
+            Text(ActiveFont.Font, "Start", SCREEN_BOTTOM_LEFT + new Vector2(240f, -160f), new Vector2(0f, 0.5f), Vector2.One);
+            Text(ActiveFont.Font, "Look Around", SCREEN_BOTTOM_LEFT + new Vector2(240f, -80f), new Vector2(0f, 0.5f), Vector2.One);
         }
     }
 
@@ -87,8 +116,9 @@ public class RushOverlayUI : Entity {
         this.newBest = newBest;
         Active = true;
         Visible = true;
+        animPhase = 0;
         timeAnim = 0f;
-        animComplete = false;
+        fadeAnim = 0f;
         Audio.Play(SFX.game_07_altitudecount);
         Add(new Coroutine(AnimCoroutine()));
     }
@@ -99,10 +129,10 @@ public class RushOverlayUI : Entity {
     }
 
     private string GetTimeText() {
-        if (animComplete)
+        if (timeAnim >= TIME_ANIM_DURATION)
             return ToTimeString(completionTime);
         
-        float normalized = timeAnim / ANIM_DURATION;
+        float normalized = timeAnim / TIME_ANIM_DURATION;
         long newTime;
 
         if (normalized >= 1f)
@@ -114,7 +144,7 @@ public class RushOverlayUI : Entity {
     }
 
     private IEnumerator AnimCoroutine() {
-        while (timeAnim < ANIM_DURATION) {
+        while (timeAnim < TIME_ANIM_DURATION) {
             timeAnim += Engine.RawDeltaTime;
 
             yield return null;
@@ -123,8 +153,17 @@ public class RushOverlayUI : Entity {
         if (newBest)
             Audio.Play("event:/classic/sfx55");
 
-        timeAnim = ANIM_DURATION;
-        animComplete = true;
+        timeAnim = TIME_ANIM_DURATION;
+        animPhase = 1;
+
+        while (fadeAnim < FADE_ANIM_DURATION) {
+            fadeAnim += Engine.RawDeltaTime;
+
+            yield return null;
+        }
+
+        fadeAnim = FADE_ANIM_DURATION;
+        animPhase = 2;
     }
 
     private static void GetElementPositions(float y, out Vector2 left, out Vector2 right) {

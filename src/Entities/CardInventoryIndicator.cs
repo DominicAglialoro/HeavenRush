@@ -5,7 +5,7 @@ using Monocle;
 namespace Celeste.Mod.HeavenRush; 
 
 [Tracked]
-public class CardInventoryIndicator : Entity {
+public class CardInventoryIndicator : Component {
     private static readonly Vector2 OFFSET = new(0f, -16f);
     private static readonly float ANIM_DURATION = 0.16f;
     private static readonly float ANIM_OFFSET = 3f;
@@ -16,10 +16,9 @@ public class CardInventoryIndicator : Entity {
     private int cardCount;
     private float animTimer = ANIM_DURATION;
     
-    public CardInventoryIndicator() {
+    public CardInventoryIndicator() : base(true, true) {
         texture = GFX.Game["objects/heavenRush/abilityCardIndicator/texture"];
         outline = GFX.Game["objects/heavenRush/abilityCardIndicator/outline"];
-        Depth = -13001;
     }
 
     public override void Update() {
@@ -33,15 +32,10 @@ public class CardInventoryIndicator : Entity {
     public override void Render() {
         base.Render();
 
-        var player = Scene.Tracker.GetEntity<Player>();
-        
-        if (player == null)
-            return;
-
         if (cardCount == 0)
             return;
 
-        var position = player.Position + OFFSET;
+        var position = Entity.Position + OFFSET;
 
         if (cardCount == 3)
             position.X++;

@@ -17,7 +17,7 @@ public class DemonCounter : Entity {
     public DemonCounter() {
         bg = GFX.Gui["heavenRush/demonCounter/bg"];
         Depth = -101;
-        Tag = Tags.HUD;
+        Tag = Tags.HUD | Tags.FrozenUpdate;
     }
 
     public override void Awake(Scene scene) {

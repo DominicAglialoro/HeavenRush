@@ -19,8 +19,8 @@ public class RushLevelController : Entity {
     public string LevelNumber { get; }
     
     public bool RequireKillAllDemons { get; }
-    
-    public long BestTime { get; private set; }
+
+    public long BestTime { get; private set; } = -1;
     
     public long BerryObjectiveTime { get; }
 
@@ -62,8 +62,6 @@ public class RushLevelController : Entity {
 
         if (HeavenRushModule.SaveData.BestTimes.TryGetValue(level.Session.Level, out long bestTime))
             BestTime = bestTime;
-        else
-            BestTime = -1;
         
         DemonCount = level.Tracker.CountEntities<Demon>();
         overlayUi = level.Tracker.GetEntity<RushOverlayUI>();
@@ -89,7 +87,7 @@ public class RushLevelController : Entity {
         level.Frozen = true;
 
         if (BestTime < 0 || Time < BestTime) {
-            // BestTime = Time;
+            BestTime = Time;
             // HeavenRushModule.SaveData.BestTimes[level.Session.Level] = Time;
             newBest = true;
         }
@@ -203,9 +201,12 @@ public class RushLevelController : Entity {
             session.DeathsInCurrentLevel++;
             SaveData.Instance.AddDeath(session.Area);
             ReloadLevel(false);
+            
+            foreach (var deadBody in level.Tracker.GetEntitiesCopy<PlayerDeadBody>())
+                deadBody.RemoveSelf();
         };
 
-        Active = false;
+        stateMachine.Active = false;
 
         return GAMEPLAY;
     }
