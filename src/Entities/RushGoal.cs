@@ -71,7 +71,7 @@ public class RushGoal : Entity {
         Collidable = false;
         light.Alpha = 1f;
         Audio.Play(SFX.game_07_checkpointconfetti, Position);
-        levelController.ClearLevel();
+        levelController.CompleteLevel();
     }
 
     private void OnDemonKilled() {

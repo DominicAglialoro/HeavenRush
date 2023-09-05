@@ -26,12 +26,13 @@ public static class PlayerExtensions {
     private static readonly Vector2 RED_BOOST_DASH_SPEED = new(280f, 240f);
     private const float RED_BOOST_DASH_DURATION = 0.15f;
     private const float RED_BOOST_DURATION = 1f;
-    private const float RED_BOOST_AIR_FRICTION = 0.4f;
+    private const float RED_BOOST_AIR_FRICTION_MULTIPLIER = 0.4f;
     private const float RED_BOOST_STORED_SPEED_DURATION = 0.083f;
     private const float WHITE_DASH_SPEED = 325f;
     private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
     private const float WHITE_DASH_SUPER_GRACE_PERIOD = 0.083f;
-    private const float GROUND_BOOST_FRICTION = 0.05f;
+    private const float GROUND_BOOST_CROUCH_FRICTION_MULTIPLIER = 0.5f;
+    private const float GROUND_BOOST_FRICTION_MULTIPLIER = 0.05f;
     private const float GROUND_BOOST_SPEED = 280f;
     private const float GROUND_BOOST_ACCELERATION = 650f;
 
@@ -685,11 +686,14 @@ public static class PlayerExtensions {
         };
     }
 
+    private static float GetCrouchFriction(float defaultFriction, Player player)
+        => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? defaultFriction * GROUND_BOOST_CROUCH_FRICTION_MULTIPLIER : defaultFriction;
+
     private static float GetAirFrictionMultiplier(float defaultMultiplier, Player player)
-        => player.TryGetData(out _, out var extData) && extData.RedBoostTimer > 0f ? RED_BOOST_AIR_FRICTION : defaultMultiplier;
+        => player.TryGetData(out _, out var extData) && extData.RedBoostTimer > 0f ? RED_BOOST_AIR_FRICTION_MULTIPLIER : defaultMultiplier;
 
     private static float GetGroundFrictionMultiplier(float defaultMultiplier, Player player)
-        => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? GROUND_BOOST_FRICTION : defaultMultiplier;
+        => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? GROUND_BOOST_FRICTION_MULTIPLIER : defaultMultiplier;
 
     private static bool TryDoCustomJump(Player player) {
         if (!player.TryGetData(out var dynamicData, out var extData))
@@ -731,7 +735,7 @@ public static class PlayerExtensions {
 
         cursor.GotoNext(MoveType.Before,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchLdcI4(14),
             instr => instr.MatchCallvirt<StateMachine>("set_State"));
 
@@ -820,7 +824,7 @@ public static class PlayerExtensions {
 
         cursor.GotoNext(MoveType.AfterLabel,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchCall<Actor>("Update"));
+            instr => instr.MatchCall<Actor>(nameof(Actor.Update)));
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(BeforeBaseUpdate)));
@@ -838,7 +842,7 @@ public static class PlayerExtensions {
 
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchCallvirt<StateMachine>("get_State"),
             instr => instr.OpCode == OpCodes.Ldc_I4_2,
             instr => instr.OpCode == OpCodes.Beq_S);
@@ -852,7 +856,7 @@ public static class PlayerExtensions {
         cursor.Index = -1;
         cursor.GotoPrev(MoveType.AfterLabel,
             instr => instr.MatchLdcR4(0f),
-            instr => instr.MatchStfld<Vector2>("X"));
+            instr => instr.MatchStfld<Vector2>(nameof(Vector2.X)));
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(OnTrueCollideH)));
@@ -870,7 +874,7 @@ public static class PlayerExtensions {
         
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchCallvirt<StateMachine>("get_State"),
             instr => instr.OpCode == OpCodes.Ldc_I4_2,
             instr => instr.OpCode == OpCodes.Beq_S);
@@ -890,7 +894,7 @@ public static class PlayerExtensions {
         cursor.Index = -1;
         cursor.GotoPrev(MoveType.Before,
             instr => instr.MatchLdcR4(0f),
-            instr => instr.MatchStfld<Vector2>("Y"));
+            instr => instr.MatchStfld<Vector2>(nameof(Vector2.Y)));
 
         cursor.Emit(OpCodes.Ldarg_0);
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(OnTrueCollideV)));
@@ -901,7 +905,7 @@ public static class PlayerExtensions {
         
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchCallvirt<StateMachine>("get_State"),
             instr => instr.OpCode == OpCodes.Ldc_I4_5,
             instr => instr.OpCode == OpCodes.Beq_S);
@@ -918,7 +922,7 @@ public static class PlayerExtensions {
         
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchCallvirt<StateMachine>("get_State"),
             instr => instr.OpCode == OpCodes.Ldc_I4_5,
             instr => instr.OpCode == OpCodes.Beq_S);
@@ -931,7 +935,7 @@ public static class PlayerExtensions {
         
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
-            instr => instr.MatchLdfld<Player>("StateMachine"),
+            instr => instr.MatchLdfld<Player>(nameof(Player.StateMachine)),
             instr => instr.MatchCallvirt<StateMachine>("get_State"),
             instr => instr.OpCode == OpCodes.Ldc_I4_5,
             instr => instr.OpCode == OpCodes.Beq);
@@ -981,15 +985,17 @@ public static class PlayerExtensions {
     }
 
     private static int Player_NormalUpdate(On.Celeste.Player.orig_NormalUpdate normalUpdate, Player player) {
-        if (!player.TryGetData(out var dynamicData, out var extData))
-            return normalUpdate(player);
+        int nextState = normalUpdate(player);
+        
+        if (nextState != 0 || !player.TryGetData(out var dynamicData, out var extData))
+            return nextState;
         
         int moveX = Input.MoveX.Value;
         
         if ((extData.RedBoostTimer > 0f || extData.Surfing) && dynamicData.Get<bool>("onGround") && !player.Ducking && moveX * player.Speed.X < GROUND_BOOST_SPEED)
             player.Speed.X = Calc.Approach(player.Speed.X, moveX * GROUND_BOOST_SPEED, Engine.DeltaTime * GROUND_BOOST_ACCELERATION);
 
-        return normalUpdate(player);
+        return 0;
     }
 
     private static void Player_NormalUpdate_il(ILContext il) {
@@ -1012,6 +1018,12 @@ public static class PlayerExtensions {
         cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(UseCard)));
         cursor.Emit(OpCodes.Ret);
         cursor.MarkLabel(newLabel);
+
+        cursor.GotoNext(instr => instr.MatchCall(typeof(Calc).FullName, nameof(Calc.Approach)));
+        cursor.GotoPrev(MoveType.After, instr => instr.MatchLdcR4(500f));
+
+        cursor.Emit(OpCodes.Ldarg_0);
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(GetCrouchFriction)));
 
         cursor.GotoNext(MoveType.After,
             instr => instr.OpCode == OpCodes.Ldarg_0,
@@ -1056,7 +1068,7 @@ public static class PlayerExtensions {
     
     private static void Player_IntroRespawnEnd(On.Celeste.Player.orig_IntroRespawnEnd introRespawnEnd, Player player) {
         introRespawnEnd(player);
-        player.Scene.Tracker.GetEntity<RushLevelController>()?.RespawnCompleted();
+        player.Scene.Tracker.GetEntity<RushLevelController>()?.StartTimer();
     }
 
     private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite updateSprite, Player player) {

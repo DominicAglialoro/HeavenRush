@@ -8,11 +8,10 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/rushLevelController"), Tracked]
 public class RushLevelController : Entity {
-    private const int INIT = 0;
-    private const int AWAITING_RESPAWN = 1;
-    private const int LOOK_AROUND = 2;
-    private const int GAMEPLAY = 3;
-    private const int COMPLETE = 4;
+    private const int AWAITING_RESPAWN = 0;
+    private const int LOOK_AROUND = 1;
+    private const int GAMEPLAY = 2;
+    private const int COMPLETE = 3;
     
     public string LevelName { get; }
     
@@ -24,20 +23,19 @@ public class RushLevelController : Entity {
     
     public long BerryObjectiveTime { get; }
 
-    public long Time => startedAtTime >= 0 ? level.Session.Time - startedAtTime : 0;
+    public long Time { get; private set; } = -1;
     
     public int DemonCount { get; private set; }
 
     public bool CanRetry => stateMachine.State == GAMEPLAY;
 
-    public event Action LevelCleared;
+    public event Action LevelCompleted;
 
     public event Action DemonKilled;
 
     private StateMachine stateMachine;
     private Level level;
     private RushOverlayUI overlayUi;
-    private long startedAtTime = -1;
     private bool berryFailed;
     private bool newBest;
 
@@ -46,13 +44,6 @@ public class RushLevelController : Entity {
         LevelNumber = data.Attr("levelNumber");
         RequireKillAllDemons = data.Bool("requireKillAllDemons");
         BerryObjectiveTime = 10000 * data.Int("berryObjectiveTime");
-        
-        Add(stateMachine = new StateMachine());
-        stateMachine.SetCallbacks(INIT, InitUpdate);
-        stateMachine.SetCallbacks(AWAITING_RESPAWN, AwaitingRespawnUpdate, null, AwaitingRespawnBegin, AwaitingRespawnEnd);
-        stateMachine.SetCallbacks(LOOK_AROUND, null, LookAroundCoroutine);
-        stateMachine.SetCallbacks(GAMEPLAY, GameplayUpdate, null, GameplayBegin);
-        stateMachine.SetCallbacks(COMPLETE, CompleteUpdate, null, CompleteBegin, CompleteEnd);
         Tag = Tags.FrozenUpdate;
     }
 
@@ -65,9 +56,16 @@ public class RushLevelController : Entity {
         
         DemonCount = level.Tracker.CountEntities<Demon>();
         overlayUi = level.Tracker.GetEntity<RushOverlayUI>();
+
+        stateMachine = new StateMachine();
+        stateMachine.SetCallbacks(AWAITING_RESPAWN, AwaitingRespawnUpdate, null, AwaitingRespawnBegin, AwaitingRespawnEnd);
+        stateMachine.SetCallbacks(LOOK_AROUND, null, LookAroundCoroutine);
+        stateMachine.SetCallbacks(GAMEPLAY, GameplayUpdate, null, GameplayBegin);
+        stateMachine.SetCallbacks(COMPLETE, CompleteUpdate, null, CompleteBegin, CompleteEnd);
+        Add(stateMachine);
     }
 
-    public void RespawnCompleted() => startedAtTime = level.Session.Time;
+    public void StartTimer() => Time = 0;
 
     public void DemonsKilled(int count) {
         if (DemonCount == 0)
@@ -75,15 +73,17 @@ public class RushLevelController : Entity {
 
         DemonCount -= count;
 
-        if (DemonCount == 0)
+        if (DemonCount <= 0) {
+            DemonCount = 0;
             Util.PlaySound("event:/classic/sfx13", 2f);
+        }
         else
             Util.PlaySound("event:/classic/sfx8", 2f);
         
         DemonKilled?.Invoke();
     }
 
-    public void ClearLevel() {
+    public void CompleteLevel() {
         level.Frozen = true;
 
         if (BestTime < 0 || Time < BestTime) {
@@ -97,11 +97,9 @@ public class RushLevelController : Entity {
         if (Time <= BerryObjectiveTime)
             level.Tracker.GetEntity<RushBerry>()?.OnCollect();
         
-        LevelCleared?.Invoke();
+        LevelCompleted?.Invoke();
         stateMachine.State = COMPLETE;
     }
-
-    private int InitUpdate() => AWAITING_RESPAWN;
 
     private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, LevelNumber, BestTime, BerryObjectiveTime);
 
@@ -185,28 +183,18 @@ public class RushLevelController : Entity {
     private void GameplayBegin() => overlayUi.Hide();
 
     private int GameplayUpdate() {
+        if (Time >= 0)
+            Time += TimeSpan.FromSeconds(Engine.RawDeltaTime).Ticks;
+        
         if (!berryFailed && Time > BerryObjectiveTime) {
             berryFailed = true;
             level.Tracker.GetEntity<RushBerry>()?.Pop();
         }
-        
-        if (!HeavenRushModule.Settings.InstantRetry.Pressed)
-            return GAMEPLAY;
-        
-        RemovePlayer();
-        level.OnEndOfFrame += () => {
-            var session = level.Session;
-            
-            session.Deaths++;
-            session.DeathsInCurrentLevel++;
-            SaveData.Instance.AddDeath(session.Area);
-            ReloadLevel(false);
-            
-            foreach (var deadBody in level.Tracker.GetEntitiesCopy<PlayerDeadBody>())
-                deadBody.RemoveSelf();
-        };
 
-        stateMachine.Active = false;
+        if (HeavenRushModule.Settings.InstantRetry.Pressed) {
+            level.InstantRetry();
+            Active = false;
+        }
 
         return GAMEPLAY;
     }
@@ -215,9 +203,9 @@ public class RushLevelController : Entity {
 
     private int CompleteUpdate() {
         if (Input.MenuConfirm.Pressed)
-            level.DoScreenWipe(false, LoadNextLevel);
+            level.GoToNextLevel();
         else if (Input.MenuCancel.Pressed)
-            level.DoScreenWipe(false, () => ReloadLevel(true));
+            level.ReplayLevel();
         else
             return COMPLETE;
 
@@ -227,39 +215,4 @@ public class RushLevelController : Entity {
     }
 
     private void CompleteEnd() => overlayUi.Hide();
-
-    private void LoadNextLevel() {
-        RemovePlayer();
-                
-        var session = level.Session;
-        var levels = session.MapData.Levels;
-        int index = levels.IndexOf(session.LevelData) + 1;
-
-        if (index >= levels.Count) {
-            level.Reload();
-                    
-            return;
-        }
-
-        level.UnloadLevel();
-        session.Level = levels[index].Name;
-        session.RespawnPoint = level.GetSpawnPoint(new Vector2(level.Bounds.Left, level.Bounds.Top));
-        level.LoadLevel(Player.IntroTypes.Respawn);
-    }
-
-    private void ReloadLevel(bool wipe) {
-        RemovePlayer();
-        level.Reload();
-        
-        if (!wipe)
-            level.Wipe.Cancel();
-    }
-
-    private void RemovePlayer() {
-        foreach (var player in level.Tracker.GetEntitiesCopy<Player>())
-            player.RemoveSelf();
-
-        foreach (var deadBody in level.Tracker.GetEntitiesCopy<PlayerDeadBody>())
-            deadBody.RemoveSelf();
-    }
 }
