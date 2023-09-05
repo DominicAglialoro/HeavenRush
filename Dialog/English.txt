@@ -1,4 +1,7 @@
 HeavenRush=Heaven Rush
-heavenRush_HeavenRush=Heaven Rush
 
+heavenRush_HeavenRush=Heaven Rush
+heavenRush_HeavenRush_postcard=An {# FF0000}Instant Retry{#} input bind has been added in Mod Options.
+
+HEAVEN_RUSH_TUTORIAL_ULTRA=Ultra
 HEAVEN_RUSH_TUTORIAL_USE_CARD=Use Card
