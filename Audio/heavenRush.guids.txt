@@ -3,6 +3,10 @@
 {f7106ed8-9427-4de2-88fe-4c2f8927849d} event:/heavenRush/game/red_boost_sustain
 {9f71c3bc-88b1-44a0-ad53-873f822f4c12} event:/heavenRush/game/surf
 
+{68c31a6e-a9e1-4ba9-81ca-0db2bdc59a55} event:/heavenRush/music/machine_girl_house_of_cards
+{52777a3d-800f-4db2-88ba-e8e859820dc0} event:/heavenRush/music/machine_girl_mission_complete
+{927471d7-6787-4ec6-99a1-1bd3b3641153} event:/heavenRush/music/machine_girl_thousand_pound_butterfly
 {ae3a56df-af3e-46a2-94e1-f50a54a521e2} event:/heavenRush/music/machine_girl_virtual_paradise
+{9b242787-55ba-42ff-9976-78c02151ed30} event:/heavenRush/music/machine_girl_cloud_nine
 
 {e82a31cd-2e5a-4af7-a23d-e61c6de308c8} bank:/heavenRush
