@@ -62,7 +62,7 @@ public class AbilityCard : Entity {
     }
 
     private void OnPlayer(Player player) {
-        if (!player.GiveCard(cardType))
+        if (!player.TryGiveCard(cardType))
             return;
         
         Audio.Play(SFX.ui_world_journal_page_cover_forward, Position);

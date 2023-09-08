@@ -1,34 +1,27 @@
+using System.Collections.Generic;
+
 namespace Celeste.Mod.HeavenRush; 
 
 public class CardInventory {
     private const int MAX_COUNT = 3;
-    
-    public AbilityCardType CardType { get; private set; }
-    
-    public int CardCount { get; private set; }
 
-    public void Reset() {
-        CardType = AbilityCardType.Yellow;
-        CardCount = 0;
-    }
+    public int CardCount => cards.Count;
 
-    public void PopCard() {
-        if (CardCount > 0)
-            CardCount--;
-    }
+    public IEnumerable<AbilityCardType> Cards => cards;
+
+    private Queue<AbilityCardType> cards = new(MAX_COUNT);
+
+    public void Reset() => cards.Clear();
+
+    public AbilityCardType? PopCard() => cards.Count > 0 ? cards.Dequeue() : null;
+
+    public AbilityCardType? PeekCard() => cards.Count > 0 ? cards.Peek() : null;
 
     public bool TryAddCard(AbilityCardType cardType) {
-        if (cardType == CardType) {
-            if (CardCount >= MAX_COUNT)
-                return false;
-
-            CardCount++;
-
-            return true;
-        }
-
-        CardType = cardType;
-        CardCount = 1;
+        if (cards.Count == MAX_COUNT)
+            return false;
+        
+        cards.Enqueue(cardType);
 
         return true;
     }

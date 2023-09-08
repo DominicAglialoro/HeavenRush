@@ -109,7 +109,7 @@ public static class PlayerExtensions {
         player.StateMachine.State = 14;
     }
 
-    public static bool GiveCard(this Player player, AbilityCardType cardType) {
+    public static bool TryGiveCard(this Player player, AbilityCardType cardType) {
         player.GetOrCreateData(out _, out var extData);
 
         var cardInventory = extData.CardInventory;
@@ -117,7 +117,7 @@ public static class PlayerExtensions {
         if (!cardInventory.TryAddCard(cardType))
             return false;
         
-        extData.CardInventoryIndicator.UpdateInventory(cardInventory.CardType, cardInventory.CardCount);
+        extData.CardInventoryIndicator.UpdateInventory(cardInventory);
         extData.CardInventoryIndicator.PlayAnimation();
         Input.Grab.BufferTime = 0.08f;
 
@@ -190,25 +190,30 @@ public static class PlayerExtensions {
         return dynamicData.TryGet("heavenRushData", out extData);
     }
 
-    private static bool TryPopCard(this Player player) {
-        if (!Input.Grab.Pressed || !player.TryGetData(out _, out var extData))
-            return false;
-        
-        var cardInventory = extData.CardInventory;
-
-        if (cardInventory.CardCount == 0)
+    private static bool ShouldUseCard(this Player player) {
+        if (!Input.Grab.Pressed || !player.TryGetData(out _, out var extData) || extData.UseCardCooldown > 0f || extData.CardInventory.CardCount == 0)
             return false;
         
         Input.Grab.ConsumeBuffer();
-        cardInventory.PopCard();
         extData.UseCardCooldown = USE_CARD_COOLDOWN;
-        extData.CardInventoryIndicator.UpdateInventory(cardInventory.CardType, cardInventory.CardCount);
-        extData.CardInventoryIndicator.StopAnimation();
-   
+
+        return true;
+    }
+
+    private static AbilityCardType? PopCard(this Player player) {
+        player.GetData(out _, out var extData);
+
+        var cardInventory = extData.CardInventory;
+        var cardInventoryIndicator = extData.CardInventoryIndicator;
+        var cardType = cardInventory.PopCard();
+        
+        cardInventoryIndicator.UpdateInventory(cardInventory);
+        cardInventoryIndicator.StopAnimation();
+
         if (cardInventory.CardCount == 0)
             Input.Grab.BufferTime = 0f;
 
-        return true;
+        return cardType;
     }
 
     private static int UseYellowCard(this Player player) {
@@ -345,6 +350,27 @@ public static class PlayerExtensions {
                || state == extData.WhiteDashIndex;
     }
 
+    private static int BlueDashUpdate(this Player player) {
+        player.GetData(out var dynamicData, out var extData);
+        player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new Vector2(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
+        player.UpdateTrail(Color.Blue, 0.016f, 0.66f);
+            
+        if (Input.Jump.Pressed && timer >= BLUE_DASH_ALLOW_JUMP_AT && (extData.KilledInBlueDash || dynamicData.Get<bool>("onGround"))) {
+            player.StateMachine.State = 0;
+            player.Ducking = true;
+            dynamicData.Invoke("SuperJump");
+
+            return 0;
+        }
+            
+        foreach (var jumpThru in player.Scene.Tracker.GetEntities<JumpThru>()) {
+            if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f && !dynamicData.Invoke<bool>("DashCorrectCheck", Vector2.UnitY * (jumpThru.Top - player.Bottom)))
+                player.MoveVExact((int) (jumpThru.Top - player.Bottom));
+        }
+
+        return extData.BlueDashIndex;
+    }
+
     private static IEnumerator BlueDashCoroutine(this Player player) {
         yield return null;
 
@@ -364,21 +390,7 @@ public static class PlayerExtensions {
         SlashFx.Burst(player.Center, player.DashDir.Angle());
 
         for (float timer = 0f; timer < BLUE_DASH_DURATION; timer += Engine.DeltaTime) {
-            player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new Vector2(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
-            player.UpdateTrail(Color.Blue, 0.016f, 0.66f);
             
-            if (Input.Jump.Pressed && timer >= BLUE_DASH_ALLOW_JUMP_AT && (extData.KilledInBlueDash || dynamicData.Get<bool>("onGround"))) {
-                player.StateMachine.State = 0;
-                player.Ducking = true;
-                dynamicData.Invoke("SuperJump");
-
-                yield break;
-            }
-            
-            foreach (var jumpThru in player.Scene.Tracker.GetEntities<JumpThru>()) {
-                if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f && !dynamicData.Invoke<bool>("DashCorrectCheck", Vector2.UnitY * (jumpThru.Top - player.Bottom)))
-                    player.MoveVExact((int) (jumpThru.Top - player.Bottom));
-            }
 
             yield return null;
         }
@@ -527,11 +539,13 @@ public static class PlayerExtensions {
 
             var cardInventory = extData.CardInventory;
             
-            if (cardInventory.CardType != AbilityCardType.White || !player.TryPopCard()) {
+            if (cardInventory.PeekCard() != AbilityCardType.White || !player.ShouldUseCard()) {
                 yield return null;
                 
                 continue;
             }
+
+            player.PopCard();
 
             float newSpeed = player.Speed.Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
 
@@ -673,18 +687,14 @@ public static class PlayerExtensions {
         return defaultSpeed;
     }
 
-    private static int UseCard(Player player) {
-        player.GetData(out _, out var extData);
-
-        return extData.CardInventory.CardType switch {
-            AbilityCardType.Yellow => player.UseYellowCard(),
-            AbilityCardType.Blue => player.UseBlueCard(),
-            AbilityCardType.Green => player.UseGreenCard(),
-            AbilityCardType.Red => player.UseRedCard(),
-            AbilityCardType.White => player.UseWhiteCard(),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
+    private static int UseCard(Player player) => player.PopCard() switch {
+        AbilityCardType.Yellow => player.UseYellowCard(),
+        AbilityCardType.Blue => player.UseBlueCard(),
+        AbilityCardType.Green => player.UseGreenCard(),
+        AbilityCardType.Red => player.UseRedCard(),
+        AbilityCardType.White => player.UseWhiteCard(),
+        _ => throw new ArgumentOutOfRangeException()
+    };
 
     private static float GetCrouchFriction(float defaultFriction, Player player)
         => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? defaultFriction * GROUND_BOOST_CROUCH_FRICTION_MULTIPLIER : defaultFriction;
@@ -1009,7 +1019,7 @@ public static class PlayerExtensions {
         cursor.GotoLabel(label);
 
         cursor.Emit(OpCodes.Ldarg_0);
-        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(TryPopCard)));
+        cursor.Emit(OpCodes.Call, typeof(PlayerExtensions).GetMethodUnconstrained(nameof(ShouldUseCard)));
         
         var newLabel = cursor.DefineLabel();
         
