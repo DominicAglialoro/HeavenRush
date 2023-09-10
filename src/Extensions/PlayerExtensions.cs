@@ -18,8 +18,8 @@ public static class PlayerExtensions {
     private const float BLUE_DASH_SPEED = 1080f;
     private const float BLUE_DASH_END_SPEED = 240f;
     private const float BLUE_DASH_DURATION = 0.1f;
-    private const float BLUE_DASH_HYPER_WINDOW = 0.033f;
-    private const float BLUE_DASH_HYPER_GRACE_PERIOD = 0.033f;
+    private const float BLUE_DASH_ALLOW_JUMP_AT = 0.066f;
+    private const float BLUE_DASH_HYPER_TIME = 0.05f;
     private const float GREEN_DIVE_FALL_SPEED = 420f;
     private const float GREEN_DIVE_LAND_SPEED = 180f;
     private const float GREEN_DIVE_LAND_KILL_RADIUS = 48f;
@@ -30,7 +30,7 @@ public static class PlayerExtensions {
     private const float RED_BOOST_STORED_SPEED_DURATION = 0.1f;
     private const float WHITE_DASH_SPEED = 325f;
     private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
-    private const float WHITE_DASH_SUPER_GRACE_PERIOD = 0.033f;
+    private const float WHITE_DASH_JUMP_TIME = 0.033f;
     private const float GROUND_BOOST_CROUCH_FRICTION_MULTIPLIER = 0.5f;
     private const float GROUND_BOOST_FRICTION_MULTIPLIER = 0.05f;
     private const float GROUND_BOOST_SPEED = 280f;
@@ -139,9 +139,9 @@ public static class PlayerExtensions {
             return false;
 
         if (state == extData.BlueDashIndex)
-            extData.BlueDashKilledDemon = true;
+            extData.KilledInBlueDash = true;
         else if (state == extData.WhiteDashIndex) {
-            extData.WhiteDashJumpGraceTimer = WHITE_DASH_SUPER_GRACE_PERIOD;
+            extData.WhiteDashJumpTimer = WHITE_DASH_JUMP_TIME;
             player.StateMachine.State = 0;
         }
 
@@ -249,7 +249,8 @@ public static class PlayerExtensions {
         player.GetData(out _, out var extData);
         player.PrepareForCustomDash();
         extData.BlueDashCanHyper = false;
-        extData.BlueDashKilledDemon = false;
+        extData.KilledInBlueDash = false;
+        extData.BlueDashHyperTimer = 0f;
         extData.CustomTrailTimer = 0.016f;
         player.Sprite.Play("dash");
         Audio.Play("event:/heavenRush/game/blue_dash", player.Position);
@@ -311,7 +312,7 @@ public static class PlayerExtensions {
         dynamicData.Set("varJumpTimer", 0f);
         dynamicData.Set("wallBoostDir", 0);
         dynamicData.Set("wallBoostTimer", 0f);
-        extData.BlueDashHyperGraceTimer = 0f;
+        extData.BlueDashHyperTimer = 0f;
     }
 
     private static void PrepareForCustomDash(this Player player) {
@@ -326,6 +327,54 @@ public static class PlayerExtensions {
 
         if (!onGround && player.Ducking && player.CanUnDuck)
             player.Ducking = false;
+    }
+
+    private static bool TryDoBlueDashHyper(this Player player) {
+        if (!player.TryGetData(out var dynamicData, out var extData) || extData.BlueDashHyperTimer == 0f
+            || Math.Sign(Input.MoveX.Value) != -Math.Sign(player.DashDir.X)
+            && player.CanUnDuck && dynamicData.Invoke<bool>("WallJumpCheck", Math.Sign(player.DashDir.X)))
+            return false;
+
+        player.Ducking = true;
+        extData.BlueDashCanHyper = false;
+        extData.BlueDashHyperTimer = 0f;
+        player.StateMachine.State = 0;
+        dynamicData.Invoke("SuperJump");
+
+        return true;
+    }
+
+    private static void DoWhiteDash(this Player player, Vector2 direction, float speed) {
+        ((Level) player.Scene).Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
+        player.DashDir = direction;
+        player.Speed = speed * direction;
+
+        if (direction.X == 0f) {
+            player.Sprite.Scale = new Vector2(0.5f, 2f);
+            player.Sprite.Rotation = 0f;
+        }
+        else {
+            player.Sprite.Scale = new Vector2(2f, 0.5f);
+            player.Sprite.Rotation = (Math.Sign(direction.X) * direction).Angle();
+        }
+        
+        player.Sprite.Origin.Y = 27f;
+        player.Sprite.Position.Y = -6f;
+    }
+
+    private static bool TryDoWhiteDashJump(this Player player) {
+        if (!player.TryGetData(out var dynamicData, out var extData) || extData.WhiteDashJumpTimer == 0f)
+            return false;
+        
+        float speedBefore = Math.Abs(player.Speed.X);
+            
+        player.Ducking = false;
+        dynamicData.Invoke("SuperJump");
+
+        if (Math.Abs(player.Speed.X) < speedBefore)
+            player.Speed.X = speedBefore * Math.Sign(player.Speed.X);
+
+        return true;
     }
 
     private static void UpdateTrail(this Player player, Color color, float interval, float duration) {
@@ -357,17 +406,12 @@ public static class PlayerExtensions {
         player.GetData(out var dynamicData, out var extData);
         player.UpdateTrail(Color.Blue, 0.016f, 0.66f);
         
-        if (extData.BlueDashCanHyper && (extData.BlueDashKilledDemon || dynamicData.Get<bool>("onGround")))
-            extData.BlueDashHyperGraceTimer = BLUE_DASH_HYPER_GRACE_PERIOD;
+        if (extData.BlueDashCanHyper && (extData.KilledInBlueDash || player.OnGround(3)))
+            extData.BlueDashHyperTimer = BLUE_DASH_HYPER_TIME;
             
-        if (Input.Jump.Pressed && extData.BlueDashHyperGraceTimer > 0f) {
-            player.Ducking = true;
-            extData.BlueDashHyperGraceTimer = 0f;
-            dynamicData.Invoke("SuperJump");
-
+        if (Input.Jump.Pressed && player.TryDoBlueDashHyper())
             return 0;
-        }
-            
+
         foreach (var jumpThru in player.Scene.Tracker.GetEntities<JumpThru>()) {
             if (player.CollideCheck(jumpThru) && player.Bottom - jumpThru.Top <= 6f && !dynamicData.Invoke<bool>("DashCorrectCheck", Vector2.UnitY * (jumpThru.Top - player.Bottom)))
                 player.MoveVExact((int) (jumpThru.Top - player.Bottom));
@@ -390,11 +434,11 @@ public static class PlayerExtensions {
         player.DashDir.Y = 0f;
         player.Speed.X = aimX * BLUE_DASH_SPEED;
         player.Speed.Y = 0f;
-        dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
+        ((Level) player.Scene).Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
         SlashFx.Burst(player.Center, player.DashDir.Angle());
         
         for (float timer = 0f; timer < BLUE_DASH_DURATION; timer += Engine.DeltaTime) {
-            extData.BlueDashCanHyper = timer >= BLUE_DASH_DURATION - BLUE_DASH_HYPER_WINDOW;
+            extData.BlueDashCanHyper = timer >= BLUE_DASH_ALLOW_JUMP_AT;
             player.Sprite.Scale = Util.PreserveArea(Vector2.Lerp(new Vector2(2f, 0.5f), Vector2.One, timer / BLUE_DASH_DURATION));
 
             yield return null;
@@ -406,11 +450,29 @@ public static class PlayerExtensions {
             player.Speed.X = facing * BLUE_DASH_END_SPEED;
         else
             player.Speed.X = 0f;
-
+        
         player.StateMachine.State = 0;
     }
 
-    private static void BlueDashEnd(this Player player) => player.Sprite.Scale = Vector2.One;
+    private static void BlueDashEnd(this Player player) {
+        player.GetData(out var dynamicData, out _);
+        
+        if (Math.Abs(player.Speed.X) > BLUE_DASH_END_SPEED)
+            player.Speed.X = Math.Sign(player.Speed.X) * BLUE_DASH_END_SPEED;
+
+        float wallSpeedRetained = dynamicData.Get<float>("wallSpeedRetained");
+        
+        if (Math.Sign(wallSpeedRetained) != Math.Sign(player.Speed.X)) {
+            dynamicData.Set("wallSpeedRetained", 0f);
+            dynamicData.Set("wallSpeedRetentionTimer", 0f);
+        }
+        else if (Math.Abs(wallSpeedRetained) > Math.Abs(player.Speed.X))
+            dynamicData.Set("wallSpeedRetained", player.Speed.X);
+        
+        dynamicData.Set("jumpGraceTimer", 0f);
+        
+        player.Sprite.Scale = Vector2.One;
+    }
 
     private static int GreenDiveUpdate(this Player player) {
         if (player.CanDash) {
@@ -463,7 +525,7 @@ public static class PlayerExtensions {
         yield return null;
         
         player.GetData(out var dynamicData, out var extData);
-        dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
+        ((Level) player.Scene).Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
         extData.RedBoostTimer = RED_BOOST_DURATION;
         extData.RedBoostSoundSource.Play("event:/heavenRush/game/red_boost_sustain");
         extData.RedBoostSoundSource.DisposeOnTransition = false;
@@ -503,24 +565,13 @@ public static class PlayerExtensions {
         player.UpdateTrail(Color.White, 0.016f, 0.33f);
 
         if (extData.RedirectingWhiteDash) {
-            float newSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
+            var direction = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
+            float dashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").Length() + WHITE_DASH_REDIRECT_ADD_SPEED;
 
-            if (newSpeed < WHITE_DASH_SPEED)
-                newSpeed = WHITE_DASH_SPEED;
+            if (dashSpeed < WHITE_DASH_SPEED)
+                dashSpeed = WHITE_DASH_SPEED;
             
-            dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
-            player.DashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
-            player.Speed = newSpeed * player.DashDir;
-
-            if (player.DashDir.X == 0f) {
-                player.Sprite.Scale = new Vector2(0.5f, 2f);
-                player.Sprite.Rotation = 0f;
-            }
-            else {
-                player.Sprite.Scale = new Vector2(2f, 0.5f);
-                player.Sprite.Rotation = (Math.Sign(player.DashDir.X) * player.DashDir).Angle();
-            }
-
+            player.DoWhiteDash(direction, dashSpeed);
             extData.RedirectingWhiteDash = false;
 
             return extData.WhiteDashIndex;
@@ -547,28 +598,15 @@ public static class PlayerExtensions {
         yield return null;
         
         player.GetData(out var dynamicData, out _);
-        dynamicData.Get<Level>("level").Displacement.AddBurst(player.Center, 0.4f, 8f, 64f, 0.5f, Ease.QuadOut, Ease.QuadOut);
-        player.DashDir = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
-
-        if (player.DashDir.X == 0f) {
-            player.Sprite.Scale = new Vector2(0.5f, 2f);
-            player.Sprite.Rotation = 0f;
-        }
-        else {
-            player.Sprite.Scale = new Vector2(2f, 0.5f);
-            player.Sprite.Rotation = (Math.Sign(player.DashDir.X) * player.DashDir).Angle();
-        }
-
-        player.Sprite.Origin.Y = 27f;
-        player.Sprite.Position.Y = -6f;
         
+        var direction = dynamicData.Invoke<Vector2>("CorrectDashPrecision", dynamicData.Get<Vector2>("lastAim"));
         float beforeDashSpeed = dynamicData.Get<Vector2>("beforeDashSpeed").X;
         float dashSpeed = WHITE_DASH_SPEED;
 
-        if (player.DashDir.X != 0f && Math.Sign(player.DashDir.X) == Math.Sign(beforeDashSpeed) && Math.Abs(beforeDashSpeed) > dashSpeed)
+        if (direction.X != 0f && Math.Sign(direction.X) == Math.Sign(beforeDashSpeed) && Math.Abs(beforeDashSpeed) > dashSpeed)
             dashSpeed = Math.Abs(beforeDashSpeed);
         
-        player.Speed = dashSpeed * player.DashDir;
+        player.DoWhiteDash(direction, dashSpeed);
     }
 
     private static void WhiteDashEnd(this Player player) {
@@ -677,31 +715,7 @@ public static class PlayerExtensions {
     private static float GetGroundFrictionMultiplier(float defaultMultiplier, Player player)
         => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? GROUND_BOOST_FRICTION_MULTIPLIER : defaultMultiplier;
 
-    private static bool TryDoCustomJump(Player player) {
-        if (!player.TryGetData(out var dynamicData, out var extData))
-            return false;
-
-        if (extData.BlueDashHyperGraceTimer > 0f) {
-            player.Ducking = true;
-            dynamicData.Invoke("SuperJump");
-
-            return true;
-        }
-
-        if (extData.WhiteDashJumpGraceTimer > 0f) {
-            float speedBefore = Math.Abs(player.Speed.X);
-            
-            player.Ducking = false;
-            dynamicData.Invoke("SuperJump");
-
-            if (Math.Abs(player.Speed.X) < speedBefore)
-                player.Speed.X = speedBefore * Math.Sign(player.Speed.X);
-
-            return true;
-        }
-
-        return false;
-    }
+    private static bool TryDoCustomJump(Player player) => player.TryDoBlueDashHyper() || player.TryDoWhiteDashJump();
 
     private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) {
         if (!canRetry(player))
@@ -740,10 +754,10 @@ public static class PlayerExtensions {
         if (extData.UseCardCooldown < 0f)
             extData.UseCardCooldown = 0f;
 
-        extData.BlueDashHyperGraceTimer -= Engine.DeltaTime;
+        extData.BlueDashHyperTimer -= Engine.DeltaTime;
 
-        if (extData.BlueDashHyperGraceTimer < 0f)
-            extData.BlueDashHyperGraceTimer = 0f;
+        if (extData.BlueDashHyperTimer < 0f)
+            extData.BlueDashHyperTimer = 0f;
 
         extData.RedBoostTimer -= Engine.DeltaTime;
         
@@ -755,10 +769,10 @@ public static class PlayerExtensions {
         if (extData.RedBoostStoredSpeedTimer < 0f)
             extData.RedBoostStoredSpeedTimer = 0f;
 
-        extData.WhiteDashJumpGraceTimer -= Engine.DeltaTime;
+        extData.WhiteDashJumpTimer -= Engine.DeltaTime;
 
-        if (extData.WhiteDashJumpGraceTimer < 0f)
-            extData.WhiteDashJumpGraceTimer = 0f;
+        if (extData.WhiteDashJumpTimer < 0f)
+            extData.WhiteDashJumpTimer = 0f;
 
         update(player);
 
@@ -997,8 +1011,8 @@ public static class PlayerExtensions {
         if (!player.TryGetData(out _, out var extData))
             return;
         
-        extData.BlueDashHyperGraceTimer = 0f;
-        extData.WhiteDashJumpGraceTimer = 0f;
+        extData.BlueDashHyperTimer = 0f;
+        extData.WhiteDashJumpTimer = 0f;
     }
     
     private static void Player_IntroRespawnEnd(On.Celeste.Player.orig_IntroRespawnEnd introRespawnEnd, Player player) {
@@ -1036,15 +1050,15 @@ public static class PlayerExtensions {
         public CardInventoryIndicator CardInventoryIndicator;
         public float UseCardCooldown;
         public bool BlueDashCanHyper;
-        public bool BlueDashKilledDemon;
-        public float BlueDashHyperGraceTimer;
+        public bool KilledInBlueDash;
+        public float BlueDashHyperTimer;
         public float RedBoostTimer;
         public float RedBoostStoredSpeed;
         public float RedBoostStoredSpeedTimer;
         public SmoothParticleEmitter RedBoostParticleEmitter;
         public SoundSource RedBoostSoundSource;
         public bool RedirectingWhiteDash;
-        public float WhiteDashJumpGraceTimer;
+        public float WhiteDashJumpTimer;
         public SoundSource WhiteDashSoundSource;
         public float CustomTrailTimer;
         public bool Surfing;

@@ -5,3 +5,4 @@ heavenRush_HeavenRush_postcard=An {# FF0000}Instant Retry{#} input bind has been
 
 HEAVEN_RUSH_TUTORIAL_ULTRA=Ultra
 HEAVEN_RUSH_TUTORIAL_USE_CARD=Use Card
+HEAVEN_RUSH_TUTORIAL_HYPER=Hyper
