@@ -56,26 +56,31 @@ public class Demon : Entity {
 
     public static bool KillInRadius(Scene scene, Vector2 center, float radius) {
         int killedCount = 0;
+        var sum = Vector2.Zero;
+        bool anyRestoresDash = false;
             
         foreach (var entity in scene.Tracker.GetEntities<Demon>()) {
-            if (Vector2.DistanceSquared(center, entity.Center) > radius * radius)
-                continue;
-
             var demon = (Demon) entity;
-            float angle = (demon.Center - center).Angle();
             
+            if (!demon.alive || Vector2.DistanceSquared(center, demon.Center) > radius * radius)
+                continue;
+            
+            float angle = (demon.Center - center).Angle();
+
             demon.Die(false);
             demon.Add(new Coroutine(Util.AfterFrame(() => demon.SpawnKillParticles(angle))));
             killedCount++;
+            sum += demon.Center;
+            anyRestoresDash |= demon.restoresDash;
         }
 
         if (killedCount == 0)
             return false;
         
-        Audio.Play(SFX.game_09_iceball_break, center);
+        Audio.Play(SFX.game_09_iceball_break, sum / killedCount);
         scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
 
-        return true;
+        return anyRestoresDash;
     }
 
     private bool restoresDash;
