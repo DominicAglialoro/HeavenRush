@@ -25,7 +25,7 @@ public class DemonCounter : Entity {
         levelController = level.Tracker.GetEntity<RushLevelController>();
         levelController.DemonKilled += OnDemonKilled;
 
-        if (scene.Tracker.CountEntities<Demon>() == 0)
+        if (levelController.RemainingDemonCount == 0)
             exitAnim = EXIT_ANIM_DURATION;
     }
 
@@ -37,7 +37,7 @@ public class DemonCounter : Entity {
         if (textAnim > TEXT_ANIM_DURATION)
             textAnim = TEXT_ANIM_DURATION;
         
-        if (levelController.DemonCount > 0) {
+        if (levelController.RemainingDemonCount > 0) {
             exitAnim = 0f;
             
             return;
@@ -50,14 +50,14 @@ public class DemonCounter : Entity {
     }
 
     public override void Render() {
-        if (level.Paused || !levelController.RequireKillAllDemons)
+        if (level.Paused)
             return;
 
         var position = new Vector2(MathHelper.Lerp(40f, -bg.Width, Ease.CubeIn(exitAnim / EXIT_ANIM_DURATION)), GetYPosition());
 
         bg.Draw(position);
         
-        string text = levelController.DemonCount.ToString();
+        string text = levelController.RemainingDemonCount.ToString();
         var textPosition = position + new Vector2(180f, 42f);
         var textSize = MathHelper.Lerp(2.5f, 2f, Ease.QuadOut(textAnim / TEXT_ANIM_DURATION)) * Vector2.One;
         

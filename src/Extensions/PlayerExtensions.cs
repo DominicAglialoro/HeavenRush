@@ -30,7 +30,7 @@ public static class PlayerExtensions {
     private const float RED_BOOST_STORED_SPEED_DURATION = 0.1f;
     private const float WHITE_DASH_SPEED = 325f;
     private const float WHITE_DASH_REDIRECT_ADD_SPEED = 40f;
-    private const float WHITE_DASH_JUMP_TIME = 0.033f;
+    private const float WHITE_DASH_JUMP_TIME = 0.05f;
     private const float GROUND_BOOST_CROUCH_FRICTION_MULTIPLIER = 0.5f;
     private const float GROUND_BOOST_FRICTION_MULTIPLIER = 0.05f;
     private const float GROUND_BOOST_SPEED = 280f;

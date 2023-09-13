@@ -16,16 +16,8 @@ public class RushLevelController : Entity {
     public string LevelName { get; }
     
     public string LevelNumber { get; }
-    
-    public bool RequireKillAllDemons { get; }
 
-    public long BestTime { get; private set; } = -1;
-    
-    public long BerryObjectiveTime { get; }
-
-    public long Time { get; private set; } = -1;
-    
-    public int DemonCount { get; private set; }
+    public int RemainingDemonCount { get; private set; }
 
     public bool CanRetry => stateMachine.State == GAMEPLAY;
 
@@ -36,14 +28,19 @@ public class RushLevelController : Entity {
     private StateMachine stateMachine;
     private Level level;
     private RushOverlayUI overlayUi;
+    private bool requireKillAllDemons;
+    private long berryObjectiveTime;
+    private long bestTime;
+    private long startedAtTime;
+    private long completedAtTime;
     private bool berryFailed;
     private bool newBest;
 
     public RushLevelController(EntityData data, Vector2 offset) : base(data.Position + offset) {
         LevelName = data.Attr("levelName");
         LevelNumber = data.Attr("levelNumber");
-        RequireKillAllDemons = data.Bool("requireKillAllDemons");
-        BerryObjectiveTime = 10000 * data.Int("berryObjectiveTime");
+        requireKillAllDemons = data.Bool("requireKillAllDemons");
+        berryObjectiveTime = 10000 * data.Int("berryObjectiveTime");
         Tag = Tags.FrozenUpdate;
     }
 
@@ -51,12 +48,11 @@ public class RushLevelController : Entity {
         base.Awake(scene);
         level = (Level) scene;
 
-        if (HeavenRushModule.SaveData.BestTimes.TryGetValue(level.Session.Level, out long bestTime))
-            BestTime = bestTime;
+        if (!HeavenRushModule.SaveData.BestTimes.TryGetValue(level.Session.Level, out bestTime))
+            bestTime = -1;
         
-        DemonCount = level.Tracker.CountEntities<Demon>();
+        RemainingDemonCount = requireKillAllDemons ? level.Tracker.CountEntities<Demon>() : 0;
         overlayUi = level.Tracker.GetEntity<RushOverlayUI>();
-
         stateMachine = new StateMachine();
         stateMachine.SetCallbacks(AWAITING_RESPAWN, AwaitingRespawnUpdate, null, AwaitingRespawnBegin, AwaitingRespawnEnd);
         stateMachine.SetCallbacks(LOOK_AROUND, null, LookAroundCoroutine);
@@ -65,16 +61,16 @@ public class RushLevelController : Entity {
         Add(stateMachine);
     }
 
-    public void StartTimer() => Time = 0;
+    public void StartTimer() => startedAtTime = TimeSpan.FromSeconds(level.RawTimeActive).Ticks;
 
     public void DemonsKilled(int count) {
-        if (DemonCount == 0)
+        if (RemainingDemonCount == 0)
             return;
 
-        DemonCount -= count;
+        RemainingDemonCount -= count;
 
-        if (DemonCount <= 0) {
-            DemonCount = 0;
+        if (RemainingDemonCount <= 0) {
+            RemainingDemonCount = 0;
             Util.PlaySound("event:/classic/sfx13", 2f);
         }
         else
@@ -84,24 +80,25 @@ public class RushLevelController : Entity {
     }
 
     public void CompleteLevel() {
+        completedAtTime = GetTime();
         level.Frozen = true;
 
-        if (BestTime < 0 || Time < BestTime) {
-            BestTime = Time;
+        if (bestTime < 0 || completedAtTime < bestTime) {
+            bestTime = completedAtTime;
             // HeavenRushModule.SaveData.BestTimes[level.Session.Level] = Time;
             newBest = true;
         }
         else
             newBest = false;
         
-        if (Time <= BerryObjectiveTime)
+        if (completedAtTime <= berryObjectiveTime)
             level.Tracker.GetEntity<RushBerry>()?.OnCollect();
         
         LevelCompleted?.Invoke();
         stateMachine.State = COMPLETE;
     }
 
-    private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, LevelNumber, BestTime, BerryObjectiveTime);
+    private void AwaitingRespawnBegin() => overlayUi.ShowStart(LevelName, LevelNumber, bestTime, berryObjectiveTime);
 
     private int AwaitingRespawnUpdate() {
         var player = Scene.Tracker.GetEntity<Player>();
@@ -183,36 +180,35 @@ public class RushLevelController : Entity {
     private void GameplayBegin() => overlayUi.Hide();
 
     private int GameplayUpdate() {
-        if (Time >= 0)
-            Time += TimeSpan.FromSeconds(Engine.RawDeltaTime).Ticks;
-        
-        if (!berryFailed && Time > BerryObjectiveTime) {
+        if (!berryFailed && GetTime() > berryObjectiveTime) {
             berryFailed = true;
             level.Tracker.GetEntity<RushBerry>()?.Pop();
         }
 
         if (HeavenRushModule.Settings.InstantRetry.Pressed) {
-            level.InstantRetry();
             Active = false;
+            level.InstantRetry();
         }
 
         return GAMEPLAY;
     }
 
-    private void CompleteBegin() => overlayUi.ShowComplete(Time, BestTime, BerryObjectiveTime, newBest);
+    private void CompleteBegin() => overlayUi.ShowComplete(completedAtTime, bestTime, berryObjectiveTime, newBest);
 
     private int CompleteUpdate() {
-        if (Input.MenuConfirm.Pressed)
+        if (Input.MenuConfirm.Pressed) {
+            Active = false;
             level.GoToNextLevel();
-        else if (Input.MenuCancel.Pressed)
+        }
+        else if (Input.MenuCancel.Pressed) {
+            Active = false;
             level.ReplayLevel();
-        else
-            return COMPLETE;
-
-        Active = false;
+        }
 
         return COMPLETE;
     }
 
     private void CompleteEnd() => overlayUi.Hide();
+
+    private long GetTime() => TimeSpan.FromSeconds(level.RawTimeActive).Ticks - startedAtTime;
 }

@@ -75,7 +75,7 @@ public class RushGoal : Entity {
     }
 
     private void OnDemonKilled() {
-        if (levelController.DemonCount > 0)
+        if (levelController.RemainingDemonCount > 0)
             return;
         
         Collidable = true;

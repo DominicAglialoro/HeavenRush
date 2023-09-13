@@ -26,18 +26,18 @@ public class HeavenRushModule : EverestModule {
     }
 
     public override void Load() {
-        PlayerExtensions.Load();
         InputExtensions.Load();
         LevelExtensions.Load();
         MapMetaExtensions.Load();
+        PlayerExtensions.Load();
     }
 
     public override void Initialize() { }
 
     public override void Unload() {
-        PlayerExtensions.Unload();
         InputExtensions.Unload();
         LevelExtensions.Unload();
         MapMetaExtensions.Unload();
+        PlayerExtensions.Unload();
     }
 }
