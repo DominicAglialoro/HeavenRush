@@ -8,6 +8,11 @@ using Microsoft.Xna.Framework;
 namespace Celeste.Mod.HeavenRush; 
 
 public static class Util {
+    private const BindingFlags ALL_FLAGS = BindingFlags.Instance |
+                                           BindingFlags.Static |
+                                           BindingFlags.Public |
+                                           BindingFlags.NonPublic;
+    
     public static EventInstance PlaySound(string name, float volume = 1f, Vector2? position = null) {
         var instance = Audio.CreateInstance(name, position);
 
@@ -41,15 +46,7 @@ public static class Util {
         action();
     }
 
-    public static MethodInfo GetMethodUnconstrained(this Type type, string name) => type.GetMethod(name,
-        BindingFlags.Instance |
-        BindingFlags.Static |
-        BindingFlags.Public |
-        BindingFlags.NonPublic);
+    public static MethodInfo GetMethodUnconstrained(this Type type, string name) => type.GetMethod(name, ALL_FLAGS);
     
-    public static PropertyInfo GetPropertyUnconstrained(this Type type, string name) => type.GetProperty(name,
-        BindingFlags.Instance |
-        BindingFlags.Static |
-        BindingFlags.Public |
-        BindingFlags.NonPublic);
+    public static PropertyInfo GetPropertyUnconstrained(this Type type, string name) => type.GetProperty(name, ALL_FLAGS);
 }

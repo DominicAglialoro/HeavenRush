@@ -106,6 +106,7 @@ public static class PlayerExtensions {
         player.Active = true;
         player.Visible = true;
         player.Collidable = true;
+        player.JustRespawned = true;
         player.StateMachine.State = 14;
     }
 
@@ -363,16 +364,11 @@ public static class PlayerExtensions {
     }
 
     private static bool TryDoWhiteDashJump(this Player player) {
-        if (!player.TryGetData(out var dynamicData, out var extData) || extData.WhiteDashJumpTimer == 0f)
+        if (!player.TryGetData(out _, out var extData) || extData.WhiteDashJumpTimer == 0f)
             return false;
-        
-        float speedBefore = Math.Abs(player.Speed.X);
             
         player.Ducking = false;
-        dynamicData.Invoke("SuperJump");
-
-        if (Math.Abs(player.Speed.X) < speedBefore)
-            player.Speed.X = speedBefore * Math.Sign(player.Speed.X);
+        player.Jump(false);
 
         return true;
     }
@@ -406,7 +402,7 @@ public static class PlayerExtensions {
         player.GetData(out var dynamicData, out var extData);
         player.UpdateTrail(Color.Blue, 0.016f, 0.66f);
         
-        if (extData.BlueDashCanHyper && (extData.KilledInBlueDash || player.OnGround(3)))
+        if (extData.BlueDashCanHyper && (extData.KilledInBlueDash || player.OnGround(6)))
             extData.BlueDashHyperTimer = BLUE_DASH_HYPER_TIME;
             
         if (Input.Jump.Pressed && player.TryDoBlueDashHyper())
@@ -444,13 +440,7 @@ public static class PlayerExtensions {
             yield return null;
         }
         
-        int facing = Math.Sign(Input.MoveX.Value);
-
-        if (facing == Math.Sign(player.DashDir.X))
-            player.Speed.X = facing * BLUE_DASH_END_SPEED;
-        else
-            player.Speed.X = 0f;
-        
+        player.Speed.X = player.DashDir.X * BLUE_DASH_END_SPEED;
         player.StateMachine.State = 0;
     }
 

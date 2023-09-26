@@ -1,32 +1,28 @@
 using System;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 
 namespace Celeste.Mod.HeavenRush; 
 
 public static class LevelExtensions {
+    private static readonly MethodInfo EVEREST_EVENTS_PLAYER_DIE = typeof(Everest.Events.Player).GetMethodUnconstrained("Die");
+    
     public static void Load() => On.Celeste.Level.LoadCustomEntity += Level_LoadCustomEntity;
-
-    private static bool Level_LoadCustomEntity(On.Celeste.Level.orig_LoadCustomEntity loadCustomEntity, EntityData entityData, Level level) {
-        if (!loadCustomEntity(entityData, level))
-            return false;
-        
-        if (entityData.Name == "heavenRush/rushLevelController") {
-            level.Add(new DemonCounter());
-            level.Add(new RushOverlayUI());
-        }
-
-        return true;
-    }
 
     public static void Unload() => On.Celeste.Level.LoadCustomEntity -= Level_LoadCustomEntity;
 
     public static void InstantRetry(this Level level) {
         level.OnEndOfFrame += () => {
             var session = level.Session;
-            
-            session.Deaths++;
-            session.DeathsInCurrentLevel++;
-            SaveData.Instance.AddDeath(session.Area);
+            var player = level.Tracker.GetEntity<Player>();
+
+            if (player != null) {
+                session.Deaths++;
+                session.DeathsInCurrentLevel++;
+                SaveData.Instance.AddDeath(session.Area);
+                EVEREST_EVENTS_PLAYER_DIE.Invoke(null, new object[] { player });
+            }
+
             level.LoadLevel(null);
             level.Wipe?.Cancel();
         };
@@ -80,5 +76,17 @@ public static class LevelExtensions {
             index++;
 
         return levels[index].Name;
+    }
+
+    private static bool Level_LoadCustomEntity(On.Celeste.Level.orig_LoadCustomEntity loadCustomEntity, EntityData entityData, Level level) {
+        if (!loadCustomEntity(entityData, level))
+            return false;
+        
+        if (entityData.Name == "heavenRush/rushLevelController") {
+            level.Add(new DemonCounter());
+            level.Add(new RushOverlayUI());
+        }
+
+        return true;
     }
 }
