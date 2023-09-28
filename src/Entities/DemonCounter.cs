@@ -10,24 +10,19 @@ public class DemonCounter : Entity {
     
     private Level level;
     private MTexture bg;
+    private string text;
+    private bool animOut;
     private float textAnim = TEXT_ANIM_DURATION;
     private float exitAnim;
-    private RushLevelController levelController;
 
-    public DemonCounter() {
+    public DemonCounter(int count) {
         bg = GFX.Gui["heavenRush/demonCounter/bg"];
         Depth = -101;
         Tag = Tags.HUD | Tags.FrozenUpdate;
+        text = count.ToString();
     }
 
-    public override void Awake(Scene scene) {
-        level = (Level) scene;
-        levelController = level.Tracker.GetEntity<RushLevelController>();
-        levelController.DemonKilled += OnDemonKilled;
-
-        if (levelController.RemainingDemonCount == 0)
-            exitAnim = EXIT_ANIM_DURATION;
-    }
+    public override void Awake(Scene scene) => level = (Level) scene;
 
     public override void Update() {
         base.Update();
@@ -37,11 +32,8 @@ public class DemonCounter : Entity {
         if (textAnim > TEXT_ANIM_DURATION)
             textAnim = TEXT_ANIM_DURATION;
         
-        if (levelController.RemainingDemonCount > 0) {
-            exitAnim = 0f;
-            
+        if (!animOut)
             return;
-        }
 
         exitAnim += Engine.DeltaTime;
 
@@ -57,7 +49,6 @@ public class DemonCounter : Entity {
 
         bg.Draw(position);
         
-        string text = levelController.RemainingDemonCount.ToString();
         var textPosition = position + new Vector2(180f, 42f);
         var textSize = MathHelper.Lerp(2.5f, 2f, Ease.QuadOut(textAnim / TEXT_ANIM_DURATION)) * Vector2.One;
         
@@ -65,7 +56,13 @@ public class DemonCounter : Entity {
         ActiveFont.DrawOutline(text, textPosition, 0.5f * Vector2.One, textSize, new Color(255, 0, 128), 2f, Color.Black);
     }
 
-    private void OnDemonKilled() => textAnim = 0f;
+    public void UpdateDemonCount(int count) {
+        text = count.ToString();
+        textAnim = 0f;
+
+        if (count == 0)
+            animOut = true;
+    }
 
     private float GetYPosition() {
         const float y = 50f;

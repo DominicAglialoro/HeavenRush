@@ -6,11 +6,7 @@ rushLevelController.texture = "loenn/heavenRush/rushLevelController"
 rushLevelController.placements = {
 	name = "controller",
 	data = {
-		levelName = "",
-		levelNumber = "",
-		requireKillAllDemons = true,
-		berryObjectiveTime = 0,
-		authorObjectiveTime = 0
+		requireKillAllDemons = true
 	}
 }
 

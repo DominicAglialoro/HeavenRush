@@ -12,7 +12,6 @@ public class RushGoal : Entity {
     private SineWave sine;
     private VertexLight light;
     private BloomPoint bloom;
-    private RushLevelController levelController;
     
     public RushGoal(EntityData data, Vector2 offset) : base(data.Position + offset) {
         Collider = new Hitbox(16f, 24f, -8f, -24f);
@@ -56,8 +55,6 @@ public class RushGoal : Entity {
 
     public override void Awake(Scene scene) {
         base.Awake(scene);
-        levelController = Scene.Tracker.GetEntity<RushLevelController>();
-        levelController.DemonKilled += OnDemonKilled;
 
         if (Scene.Tracker.CountEntities<Demon>() == 0)
             return;
@@ -66,24 +63,17 @@ public class RushGoal : Entity {
         back.Visible = false;
         effect.Visible = false;
     }
-    
-    private void OnPlayer(Player player) {
-        Collidable = false;
-        light.Alpha = 1f;
-        Audio.Play(SFX.game_07_checkpointconfetti, Position);
-        levelController.CompleteLevel();
-    }
 
-    private void OnDemonKilled() {
-        if (levelController.RemainingDemonCount > 0)
-            return;
-        
+    public void Activate() {
         Collidable = true;
         back.Visible = true;
         effect.Visible = true;
     }
-
-    private void UpdateCrystalY() {
-        crystal.Y = bloom.Y = -12f + sine.Value;
+    
+    private void OnPlayer(Player player) {
+        Collidable = false;
+        ((Level) Scene).WarpToNextLevel();
     }
+
+    private void UpdateCrystalY() => crystal.Y = bloom.Y = -12f + sine.Value;
 }

@@ -15,6 +15,8 @@ entities.heavenRush/rushBerry.placements.name.berry=Rush Berry
 
 entities.heavenRush/rushLevelController.placements.name.controller=Rush Level Controller
 
+entities.heavenRush/levelTitleMessage.placements.name.message=Level Title Message
+
 triggers.heavenRush/trueNoGrabTrigger.placements.name.trigger=True No Grab Trigger
 
 style.effects.heavenRush/waterPlane.name=Water Plane

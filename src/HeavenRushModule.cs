@@ -27,7 +27,6 @@ public class HeavenRushModule : EverestModule {
 
     public override void Load() {
         InputExtensions.Load();
-        LevelExtensions.Load();
         MapMetaExtensions.Load();
         PlayerExtensions.Load();
     }
@@ -36,7 +35,6 @@ public class HeavenRushModule : EverestModule {
 
     public override void Unload() {
         InputExtensions.Unload();
-        LevelExtensions.Unload();
         MapMetaExtensions.Unload();
         PlayerExtensions.Unload();
     }

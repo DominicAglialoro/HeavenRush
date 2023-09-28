@@ -61,13 +61,9 @@ public static class PlayerExtensions {
         DirectionRange = 0.7f
     };
 
-    private static IDetour On_Celeste_Player_get_CanRetry;
-    private static IDetour On_Celeste_Player_orig_Added;
     private static IDetour IL_Celeste_Player_orig_Update;
     
     public static void Load() {
-        On_Celeste_Player_get_CanRetry = new Hook(typeof(Player).GetPropertyUnconstrained("CanRetry").GetGetMethod(), Player_get_CanRetry);
-        On_Celeste_Player_orig_Added = new Hook(typeof(Player).GetMethodUnconstrained("orig_Added"), Player_orig_Added);
         On.Celeste.Player.Update += Player_Update;
         IL_Celeste_Player_orig_Update = new ILHook(typeof(Player).GetMethodUnconstrained("orig_Update"), Player_orig_Update_il);
         On.Celeste.Player.OnCollideH += Player_OnCollideH;
@@ -81,13 +77,10 @@ public static class PlayerExtensions {
         On.Celeste.Player.NormalUpdate += Player_NormalUpdate;
         IL.Celeste.Player.NormalUpdate += Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin += Player_DashBegin;
-        On.Celeste.Player.IntroRespawnEnd += Player_IntroRespawnEnd;
         On.Celeste.Player.UpdateSprite += Player_UpdateSprite;
     }
 
     public static void Unload() {
-        On_Celeste_Player_get_CanRetry.Dispose();
-        On_Celeste_Player_orig_Added.Dispose();
         On.Celeste.Player.Update -= Player_Update;
         IL_Celeste_Player_orig_Update.Dispose();
         IL.Celeste.Player.OnCollideH -= Player_OnCollideH_il;
@@ -98,16 +91,33 @@ public static class PlayerExtensions {
         On.Celeste.Player.WallJump -= Player_WallJump;
         IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin -= Player_DashBegin;
-        On.Celeste.Player.IntroRespawnEnd -= Player_IntroRespawnEnd;
         On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
     }
 
-    public static void Spawn(this Player player) {
-        player.Active = true;
-        player.Visible = true;
-        player.Collidable = true;
-        player.JustRespawned = true;
-        player.StateMachine.State = 14;
+    public static void ClearRushData(this Player player) {
+        if (!player.TryGetData(out _, out var extData))
+            return;
+        
+        var cardInventory = extData.CardInventory;
+
+        cardInventory.Reset();
+        extData.CardInventoryIndicator.UpdateInventory(cardInventory);
+        extData.UseCardCooldown = 0f;
+        extData.BlueDashCanHyper = false;
+        extData.KilledInBlueDash = false;
+        extData.BlueDashHyperTimer = 0f;
+        extData.RedBoostTimer = 0f;
+        extData.RedBoostStoredSpeed = 0f;
+        extData.RedBoostStoredSpeedTimer = 0f;
+        extData.RedBoostParticleEmitter.Active = false;
+        extData.RedBoostSoundSource.Stop();
+        extData.RedirectingWhiteDash = false;
+        extData.WhiteDashJumpTimer = 0f;
+        extData.WhiteDashSoundSource.Stop();
+        extData.CustomTrailTimer = 0f;
+        extData.Surfing = false;
+        extData.SurfParticleEmitter.Active = false;
+        extData.SurfSoundSource.Stop();
     }
 
     public static bool TryGiveCard(this Player player, AbilityCardType cardType) {
@@ -706,31 +716,6 @@ public static class PlayerExtensions {
         => player.TryGetData(out _, out var extData) && (extData.RedBoostTimer > 0f || extData.Surfing) ? GROUND_BOOST_FRICTION_MULTIPLIER : defaultMultiplier;
 
     private static bool TryDoCustomJump(Player player) => player.TryDoBlueDashHyper() || player.TryDoWhiteDashJump();
-
-    private static bool Player_get_CanRetry(Func<Player, bool> canRetry, Player player) {
-        if (!canRetry(player))
-            return false;
-
-        var levelController = player.Scene.Tracker.GetEntity<RushLevelController>();
-
-        return levelController == null || levelController.CanRetry;
-    }
-
-    private static void Player_orig_Added(Action<Player, Scene> orig_Added, Player player, Scene scene) {
-        var levelController = scene.Tracker.GetEntity<RushLevelController>();
-        
-        if (levelController == null) {
-            orig_Added(player, scene);
-            
-            return;
-        }
-        
-        player.Active = false;
-        player.Visible = false;
-        player.Collidable = false;
-        player.IntroType = Player.IntroTypes.None;
-        orig_Added(player, scene);
-    }
     
     private static void Player_Update(On.Celeste.Player.orig_Update update, Player player) {
         if (!player.TryGetData(out var dynamicData, out var extData)) {
@@ -1003,11 +988,6 @@ public static class PlayerExtensions {
         
         extData.BlueDashHyperTimer = 0f;
         extData.WhiteDashJumpTimer = 0f;
-    }
-    
-    private static void Player_IntroRespawnEnd(On.Celeste.Player.orig_IntroRespawnEnd introRespawnEnd, Player player) {
-        introRespawnEnd(player);
-        player.Scene.Tracker.GetEntity<RushLevelController>()?.StartTimer();
     }
 
     private static void Player_UpdateSprite(On.Celeste.Player.orig_UpdateSprite updateSprite, Player player) {
