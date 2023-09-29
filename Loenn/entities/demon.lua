@@ -7,28 +7,22 @@ demon.placements = {
 		name = "grounded",
 		data = {
 			grounded = true,
-			restoresDash = true
+			dashRestores = 1
 		}
 	},
 	{
 		name = "aerial",
 		data = {
 			grounded = false,
-			restoresDash = true
+			dashRestores = 1
 		}
 	}
 }
 
 demon.fieldInformation = {
-	cardType = {
-		options = {
-			"Yellow",
-			"Blue",
-			"Green",
-			"Red",
-			"White"
-		},
-		editable = false
+	dashRestores = {
+		fieldType = "integer",
+		minimumValue = 0
 	}
 }
 
@@ -37,7 +31,7 @@ function demon.texture(room, entity)
 end
 
 function demon.color(room, entity)
-	return entity.restoresDash and { 1, 1, 1 } or { 0, 1, 1 }
+	return entity.dashRestores == 0 and { 0, 1, 1 } or entity.dashRestores == 1 and { 1, 1, 1 } or entity.dashRestores == 2 and { 1, 0.4, 0.8 } or { 1, 0, 1 }
 end
 
 return demon

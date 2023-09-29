@@ -1,3 +1,4 @@
+using System;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
@@ -72,7 +73,23 @@ public class RushGoal : Entity {
     
     private void OnPlayer(Player player) {
         Collidable = false;
-        ((Level) Scene).WarpToNextLevel();
+        Audio.Play(SFX.game_10_glitch_short);
+        player.Speed = player.Speed.SafeNormalize() * Math.Min(player.Speed.Length(), 120f);
+        
+        var tween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.3f, true);
+        
+        tween.UseRawDeltaTime = true;
+        tween.OnUpdate = tween => {
+            Glitch.Value = 0.5f * tween.Percent;
+            Engine.TimeRate = 1f - Ease.ExpoOut(tween.Percent);
+        };
+        tween.OnComplete = _ => {
+            Glitch.Value = 0.5f;
+            Engine.TimeRate = 1f;
+            ((Level) Scene).WarpToNextLevel();
+        };
+        
+        Add(tween);
     }
 
     private void UpdateCrystalY() => crystal.Y = bloom.Y = -12f + sine.Value;

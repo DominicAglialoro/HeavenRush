@@ -17,11 +17,10 @@ public static class LevelExtensions {
             player.ClearRushData();
             player.Facing = facing;
 
-            var tween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.3f, true);
+            var tween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.1f, true);
 
             tween.OnUpdate = tween => Glitch.Value = 0.5f * (1f - tween.Eased);
             player.Add(tween);
-            Audio.Play(SFX.game_10_glitch_short);
         };
     }
     

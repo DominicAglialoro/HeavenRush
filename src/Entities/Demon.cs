@@ -54,10 +54,10 @@ public class Demon : Entity {
         SpinFlippedChance = true
     }) { Offset = offset };
 
-    public static bool KillInRadius(Scene scene, Vector2 center, float radius) {
+    public static int KillInRadius(Scene scene, Vector2 center, float radius) {
         int killedCount = 0;
         var sum = Vector2.Zero;
-        bool anyRestoresDash = false;
+        int dashRestores = 0;
             
         foreach (var entity in scene.Tracker.GetEntities<Demon>()) {
             var demon = (Demon) entity;
@@ -71,19 +71,21 @@ public class Demon : Entity {
             demon.Add(new Coroutine(Util.AfterFrame(() => demon.SpawnKillParticles(angle))));
             killedCount++;
             sum += demon.Center;
-            anyRestoresDash |= demon.restoresDash;
+
+            if (demon.dashRestores > dashRestores)
+                dashRestores = demon.dashRestores;
         }
 
         if (killedCount == 0)
-            return false;
+            return 0;
         
         Audio.Play(SFX.game_09_iceball_break, sum / killedCount);
         scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(killedCount);
 
-        return anyRestoresDash;
+        return dashRestores;
     }
 
-    private bool restoresDash;
+    private int dashRestores;
     private Sprite body;
     private Image outline;
     private Image eyes;
@@ -94,7 +96,7 @@ public class Demon : Entity {
     private Vector2 lastPlayerPosition;
 
     public Demon(EntityData data, Vector2 offset) : base(data.Position + offset) {
-        restoresDash = data.Bool("restoresDash");
+        dashRestores = data.Int("dashRestores");
 
         Collider = new Circle(10f);
         Depth = 100;
@@ -106,9 +108,12 @@ public class Demon : Entity {
         
         Add(outline = new Image(GFX.Game["objects/heavenRush/demon/outline"]));
         outline.CenterOrigin();
-        
-        if (!restoresDash)
-            outline.Color = Color.Cyan;
+        outline.Color = dashRestores switch {
+            0 => Color.Cyan,
+            1 => Color.White,
+            2 => Color.HotPink,
+            _ => Color.Violet
+        };
         
         Add(eyes = new Image(GFX.Game["objects/heavenRush/demon/eyes"]));
         eyes.CenterOrigin();
@@ -118,9 +123,7 @@ public class Demon : Entity {
             
             Add(feet);
             feet.CenterOrigin();
-            
-            if (!restoresDash)
-                feet.Color = Color.Cyan;
+            feet.Color = outline.Color;
         }
         
         Add(sine = new SineWave(0.6f));
@@ -147,6 +150,10 @@ public class Demon : Entity {
         if (alive && player.HitDemon()) {
             Celeste.Freeze(0.016f);
             Audio.Play(SFX.game_09_iceball_break, Center);
+            
+            if (dashRestores >= 2)
+                Audio.Play(SFX.game_10_pinkdiamond_touch, player.Position);
+            
             Die(true);
             Add(new Coroutine(Util.AfterFrame(() => {
                 var speed = player.Speed;
@@ -162,7 +169,7 @@ public class Demon : Entity {
             Scene.Tracker.GetEntity<RushLevelController>()?.DemonsKilled(1);
         }
         
-        if (Collidable && !alive && restoresDash && player.RefillDash())
+        if (Collidable && !alive && player.RefillDashes(dashRestores))
             Collidable = false;
     }
 
@@ -184,7 +191,7 @@ public class Demon : Entity {
     private void Die(bool allowPhantomRestore) {
         alive = false;
 
-        if (!restoresDash || !allowPhantomRestore)
+        if (dashRestores == 0 || !allowPhantomRestore)
             Collidable = false;
 
         body.Stop();

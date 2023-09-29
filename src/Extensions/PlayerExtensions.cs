@@ -13,8 +13,9 @@ public static class PlayerExtensions {
     private const float USE_CARD_COOLDOWN = 0.1f;
     private const float YELLOW_BOUNCE_MIN_X = 90f;
     private const float YELLOW_BOUNCE_ADD_X = 40f;
-    private const float YELLOW_BOUNCE_MIN_Y = -315f;
-    private const float YELLOW_BOUNCE_ADD_Y = -150f;
+    private const float YELLOW_BOUNCE_MIN_Y = -220f;
+    private const float YELLOW_BOUNCE_ADD_Y = -80f;
+    private const float YELLOW_BOUNCE_VAR_JUMP_TIME = 0.15f;
     private const float BLUE_DASH_SPEED = 1080f;
     private const float BLUE_DASH_END_SPEED = 240f;
     private const float BLUE_DASH_DURATION = 0.1f;
@@ -92,6 +93,15 @@ public static class PlayerExtensions {
         IL.Celeste.Player.NormalUpdate -= Player_NormalUpdate_il;
         On.Celeste.Player.DashBegin -= Player_DashBegin;
         On.Celeste.Player.UpdateSprite -= Player_UpdateSprite;
+    }
+
+    public static bool RefillDashes(this Player player, int dashes) {
+        if (dashes <= player.Dashes)
+            return false;
+
+        player.Dashes = dashes;
+
+        return true;
     }
 
     public static void ClearRushData(this Player player) {
@@ -238,6 +248,7 @@ public static class PlayerExtensions {
         
         player.Speed = Vector2.Zero;
         player.Add(new Coroutine(Util.NextFrame(() => {
+            var dynamicData = DynamicData.For(player);
             int moveX = Input.MoveX.Value;
             float newSpeedX = previousSpeed.X + moveX * YELLOW_BOUNCE_ADD_X;
 
@@ -251,6 +262,10 @@ public static class PlayerExtensions {
             
             player.Speed.X = newSpeedX;
             player.Speed.Y = newSpeedY;
+            player.AutoJump = true;
+            player.AutoJumpTimer = 0f;
+            dynamicData.Set("varJumpSpeed", newSpeedY);
+            dynamicData.Set("varJumpTimer", YELLOW_BOUNCE_VAR_JUMP_TIME);
         })));
 
         return 0;
@@ -671,8 +686,12 @@ public static class PlayerExtensions {
             level.Particles.Emit(Player.P_SummitLandB, 8, player.BottomCenter + Vector2.UnitX * 2f, Vector2.UnitX * 2f, -0.2617994f);
             level.Displacement.AddBurst(player.Center, 0.4f, 16f, 128f, 1f, Ease.QuadOut, Ease.QuadOut);
 
-            if (Demon.KillInRadius(player.Scene, player.Center, GREEN_DIVE_LAND_KILL_RADIUS))
-                player.RefillDash();
+            int dashRestores = Demon.KillInRadius(player.Scene, player.Center, GREEN_DIVE_LAND_KILL_RADIUS);
+
+            player.RefillDashes(dashRestores);
+
+            if (dashRestores >= 2)
+                Audio.Play(SFX.game_10_pinkdiamond_touch, player.Position);
         }
         else if (state == extData.WhiteDashIndex)
             player.StateMachine.State = 0;
