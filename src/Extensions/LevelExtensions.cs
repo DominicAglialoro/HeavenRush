@@ -10,12 +10,14 @@ public static class LevelExtensions {
             var player = level.Tracker.GetEntity<Player>();
             var facing = player.Facing;
             
+            player.CleanUpTriggers();
             level.TeleportTo(player, level.GetNextLevel(), Player.IntroTypes.Transition);
-            player.Speed = Vector2.Zero;
+            level.Session.FirstLevel = false;
             player.StateMachine.State = 0;
+            player.Speed = Vector2.Zero;
             player.Dashes = 1;
-            player.ClearRushData();
             player.Facing = facing;
+            player.ClearRushData();
 
             var tween = Tween.Create(Tween.TweenMode.Oneshot, null, 0.1f, true);
 
