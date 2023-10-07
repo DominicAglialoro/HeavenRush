@@ -31,6 +31,7 @@ public class CloudSea : Backdrop {
         
         var layerTopColor = Calc.HexToColor(data.Attr("layerTopColor"));
         var layerBottomColor = Calc.HexToColor(data.Attr("layerBottomColor"));
+        var layerOutlineColor = Calc.HexToColor(data.Attr("layerOutlineColor"));
         float waveNearScroll = data.AttrFloat("waveNearScroll");
         float waveFarScroll = data.AttrFloat("waveFarScroll");
         float waveNearScale = data.AttrFloat("waveNearScale");
@@ -56,7 +57,7 @@ public class CloudSea : Backdrop {
                 waves[j] = new Wave(
                     MathHelper.Lerp(waveMaxAmplitude, waveMinAmplitude, interp) * scale,
                     MathHelper.Lerp(waveMinFrequency, waveMaxFrequency, interp) / (320f * scale),
-                    Calc.Random.Range(waveMinSpeed, waveMaxSpeed) * (Calc.Random.Next(2) * 2 - 1),
+                    Calc.Random.Range(waveMinSpeed, waveMaxSpeed) * (Calc.Random.Next(2) * 2 - 1) * scale,
                     Calc.Random.NextFloat());
             }
 
@@ -66,16 +67,21 @@ public class CloudSea : Backdrop {
         }
 
         foreach (var layer in layers) {
-            var mesh = layer.Mesh;
+            var fillMesh = layer.FillMesh;
 
-            for (int quad = 0; quad < mesh.Length; quad += 6) {
-                mesh[quad].Color = layerTopColor;
-                mesh[quad + 1].Color = layerBottomColor;
-                mesh[quad + 2].Color = layerTopColor;
-                mesh[quad + 3].Color = layerBottomColor;
-                mesh[quad + 4].Color = layerTopColor;
-                mesh[quad + 5].Color = layerBottomColor;
+            for (int quad = 0; quad < fillMesh.Length; quad += 6) {
+                fillMesh[quad].Color = layerTopColor;
+                fillMesh[quad + 1].Color = layerBottomColor;
+                fillMesh[quad + 2].Color = layerTopColor;
+                fillMesh[quad + 3].Color = layerBottomColor;
+                fillMesh[quad + 4].Color = layerTopColor;
+                fillMesh[quad + 5].Color = layerBottomColor;
             }
+            
+            var outlineMesh = layer.OutlineMesh;
+
+            for (int i = 0; i < outlineMesh.Length; i++)
+                outlineMesh[i].Color = layerOutlineColor;
         }
 
         buffer = new float[QUAD_COUNT + 1];
@@ -108,18 +114,25 @@ public class CloudSea : Backdrop {
                 buffer[j] = sum;
             }
 
-            var mesh = layer.Mesh;
+            var fillMesh = layer.FillMesh;
+            var outlineMesh = layer.OutlineMesh;
             float y = MathHelper.Lerp(endY, startY, layer.Depth);
 
-            for (int quad = 0, x = 0, k = 0; quad < mesh.Length; quad += 6, x += 4, k++) {
-                mesh.SetQuad(quad,
+            for (int quad = 0, x = 0, k = 0; quad < fillMesh.Length; quad += 6, x += 4, k++) {
+                fillMesh.SetQuad(quad,
                     new Vector3(x, y + buffer[k], 0f),
                     new Vector3(x, y + layerHeight, 0f),
                     new Vector3(x + 4f, y + buffer[k + 1], 0f),
                     new Vector3(x + 4f, y + layerHeight, 0f));
+                outlineMesh.SetQuad(quad,
+                    new Vector3(x, y + buffer[k] - 1f, 0f),
+                    new Vector3(x, y + buffer[k], 0f),
+                    new Vector3(x + 4f, y + buffer[k + 1] - 1f, 0f),
+                    new Vector3(x + 4f, y + buffer[k + 1], 0f));
             }
 
-            GFX.DrawVertices(Matrix.Identity, mesh, mesh.Length);
+            GFX.DrawVertices(Matrix.Identity, fillMesh, fillMesh.Length);
+            GFX.DrawVertices(Matrix.Identity, outlineMesh, fillMesh.Length);
         }
         
         Draw.SpriteBatch.Begin();
@@ -129,13 +142,15 @@ public class CloudSea : Backdrop {
         public readonly float Depth;
         public readonly float Scroll;
         public readonly Wave[] Waves;
-        public readonly VertexPositionColor[] Mesh;
+        public readonly VertexPositionColor[] FillMesh;
+        public readonly VertexPositionColor[] OutlineMesh;
 
         public Layer(float depth, float scroll, Wave[] waves) {
             Depth = depth;
             Scroll = scroll;
             Waves = waves;
-            Mesh = new VertexPositionColor[QUAD_COUNT * 6];
+            FillMesh = new VertexPositionColor[QUAD_COUNT * 6];
+            OutlineMesh = new VertexPositionColor[QUAD_COUNT * 6];
         }
     }
 

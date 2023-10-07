@@ -13,6 +13,8 @@ cloudSea.fieldOrder = {
 	"layerHeight",
 	"layerTopColor",
 	"layerBottomColor",
+	"layerOutlineColor",
+	"waveCount",
 	"waveNearScroll",
 	"waveFarScroll",
 	"waveNearScale",
@@ -22,8 +24,7 @@ cloudSea.fieldOrder = {
 	"waveMinFrequency",
 	"waveMaxFrequency",
 	"waveMinSpeed",
-	"waveMaxSpeed",
-	"waveCount"
+	"waveMaxSpeed"
 }
 
 cloudSea.fieldInformation = {
@@ -33,6 +34,7 @@ cloudSea.fieldInformation = {
 	layerHeight = { fieldType = "integer" },
 	layerTopColor = { fieldType = "color" },
 	layerBottomColor = { fieldType = "color" },
+	layerOutlineColor = { fieldType = "color" },
 	waveCount = { fieldType = "integer" }
 }
 
@@ -45,6 +47,8 @@ cloudSea.defaultData = {
 	layerHeight = 16,
 	layerTopColor = "ffffff",
 	layerBottomColor = "ffffff",
+	layerOutlineColor = "ffffff",
+	waveCount = 1,
 	waveNearScroll = 0,
 	waveFarScroll = 0,
 	waveNearScale = 1,
@@ -54,8 +58,7 @@ cloudSea.defaultData = {
 	waveMinFrequency = 0,
 	waveMaxFrequency = 0,
 	waveMinSpeed = 0,
-	waveMaxSpeed = 0,
-	waveCount = 1
+	waveMaxSpeed = 0
 }
 
 return cloudSea
