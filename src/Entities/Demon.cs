@@ -93,7 +93,6 @@ public class Demon : Entity {
     private SineWave sine;
     private Level level;
     private bool alive = true;
-    private Vector2 lastPlayerPosition;
 
     public Demon(EntityData data, Vector2 offset) : base(data.Position + offset) {
         dashRestores = data.Int("dashRestores");
@@ -132,7 +131,6 @@ public class Demon : Entity {
         Add(new VertexLight(Color.White, 1f, 32, 64));
         Add(new PlayerCollider(OnPlayer));
 
-        lastPlayerPosition = Position;
         UpdateVisual();
     }
     
@@ -176,16 +174,14 @@ public class Demon : Entity {
     private void UpdateVisual() {
         body.Y = outline.Y = sine.Value;
 
-        var eyesOrigin = new Vector2(0f, sine.Value - 1f);
         var player = Scene?.Tracker.GetEntity<Player>();
 
-        if (player != null)
-            lastPlayerPosition = player.Position;
-
-        if (lastPlayerPosition != Position)
-            eyes.Position = eyesOrigin + Vector2.Normalize(lastPlayerPosition - Position).Round();
-        else
-            eyes.Position = eyesOrigin;
+        if (player == null)
+            return;
+        
+        var eyesOffset = new Vector2(0f, sine.Value - 1f);
+        
+        eyes.Position = eyesOffset + (player.Position - (Position + eyesOffset)).SafeNormalize().Round();
     }
 
     private void Die(bool allowPhantomRestore) {

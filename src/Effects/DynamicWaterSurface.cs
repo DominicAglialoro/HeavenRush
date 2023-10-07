@@ -42,21 +42,19 @@ public class DynamicWaterSurface {
             surfaceMesh[i].Color = Water.SurfaceColor;
 
         for (int quad = 0, x = 0; quad < fillMesh.Length; quad += 6, x += 4) {
-            fillMesh[quad].Position = new Vector3(position + new Vector2(x, 0f), 0f);
-            fillMesh[quad + 1].Position = new Vector3(position + new Vector2(x + 4f, 0f), 0f);
-            fillMesh[quad + 2].Position = new Vector3(position + new Vector2(x, height), 0f);
-            fillMesh[quad + 3].Position = new Vector3(position + new Vector2(x, height), 0f);
-            fillMesh[quad + 4].Position = new Vector3(position + new Vector2(x + 4f, height), 0f);
-            fillMesh[quad + 5].Position = new Vector3(position + new Vector2(x + 4f, 0f), 0f);
+            fillMesh.SetQuad(quad,
+                new Vector3(position + new Vector2(x, 0f), 0f),
+                new Vector3(position + new Vector2(x, height), 0f),
+                new Vector3(position + new Vector2(x + 4f, 0f), 0f),
+                new Vector3(position + new Vector2(x + 4f, height), 0f));
         }
         
-        for (int quad = 0, x = 0; quad < fillMesh.Length; quad += 6, x += 4) {
-            surfaceMesh[quad].Position = new Vector3(position + new Vector2(x, -1f), 0f);
-            surfaceMesh[quad + 1].Position = new Vector3(position + new Vector2(x + 4f, -1f), 0f);
-            surfaceMesh[quad + 2].Position = new Vector3(position + new Vector2(x, 0f), 0f);
-            surfaceMesh[quad + 3].Position = new Vector3(position + new Vector2(x, 0f), 0f);
-            surfaceMesh[quad + 4].Position = new Vector3(position + new Vector2(x + 4f, 0f), 0f);
-            surfaceMesh[quad + 5].Position = new Vector3(position + new Vector2(x + 4f, 0f - 1f), 0f);
+        for (int quad = 0, x = 0; quad < surfaceMesh.Length; quad += 6, x += 4) {
+            surfaceMesh.SetQuad(quad,
+                new Vector3(position + new Vector2(x, -1f), 0f),
+                new Vector3(position + new Vector2(x, 0f), 0f),
+                new Vector3(position + new Vector2(x + 4f, -1f), 0f),
+                new Vector3(position + new Vector2(x + 4f, 0f), 0f));
         }
 
         leftmostActive = surface.Length;
@@ -107,16 +105,17 @@ public class DynamicWaterSurface {
             float startOffset = surface[i].Position;
             float endOffset = surface[i + 1].Position;
             
-            fillMesh[quad].Position = new Vector3(Position + new Vector2(x, startOffset), 0f);
-            fillMesh[quad + 1].Position = new Vector3(Position + new Vector2(x + 4f, endOffset), 0f);
-            fillMesh[quad + 5].Position = new Vector3(Position + new Vector2(x + 4f, endOffset), 0f);
+            fillMesh.SetQuad(quad,
+                new Vector3(Position + new Vector2(x, startOffset), 0f),
+                new Vector3(Position + new Vector2(x, Height), 0f),
+                new Vector3(Position + new Vector2(x + 4f, endOffset), 0f),
+                new Vector3(Position + new Vector2(x + 4f, Height), 0f));
             
-            surfaceMesh[quad].Position = new Vector3(Position + new Vector2(x, startOffset - 1f), 0f);
-            surfaceMesh[quad + 1].Position = new Vector3(Position + new Vector2(x + 4f, endOffset - 1f), 0f);
-            surfaceMesh[quad + 2].Position = new Vector3(Position + new Vector2(x, startOffset), 0f);
-            surfaceMesh[quad + 3].Position = new Vector3(Position + new Vector2(x, startOffset), 0f);
-            surfaceMesh[quad + 4].Position = new Vector3(Position + new Vector2(x + 4f, endOffset), 0f);
-            surfaceMesh[quad + 5].Position = new Vector3(Position + new Vector2(x + 4f, endOffset - 1f), 0f);
+            surfaceMesh.SetQuad(quad,
+                new Vector3(Position + new Vector2(x, startOffset - 1f), 0f),
+                new Vector3(Position + new Vector2(x, startOffset), 0f),
+                new Vector3(Position + new Vector2(x + 4f, endOffset - 1f), 0f),
+                new Vector3(Position + new Vector2(x + 4f, endOffset), 0f));
         }
     }
 

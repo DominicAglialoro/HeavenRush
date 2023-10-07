@@ -5,14 +5,8 @@ namespace Celeste.Mod.HeavenRush;
 public class HeavenRushModule : EverestModule {
     public static HeavenRushModule Instance { get; private set; }
 
-    public override Type SettingsType => typeof(HeavenRushSettings);
-    public static HeavenRushSettings Settings => (HeavenRushSettings) Instance._Settings;
-
     public override Type SessionType => typeof(HeavenRushSession);
     public static HeavenRushSession Session => (HeavenRushSession) Instance._Session;
-
-    public override Type SaveDataType => typeof(HeavenRushSaveData);
-    public static HeavenRushSaveData SaveData => (HeavenRushSaveData) Instance._SaveData;
 
     public HeavenRushModule() {
         Instance = this;

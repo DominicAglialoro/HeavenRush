@@ -63,7 +63,6 @@ public class WaterPlane : Backdrop {
 
     public override void Render(Scene scene) {
         var cameraPosition = ((Level) scene).Camera.Position.Floor();
-
         float startY = farY - (int) (cameraPosition.Y * farScrollY);
         float endY = nearY - (int) (cameraPosition.Y * nearScrollY);
         

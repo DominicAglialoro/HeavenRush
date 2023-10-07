@@ -20,3 +20,4 @@ entities.heavenRush/levelTitleMessage.placements.name.message=Level Title Messag
 triggers.heavenRush/trueNoGrabTrigger.placements.name.trigger=True No Grab Trigger
 
 style.effects.heavenRush/waterPlane.name=Water Plane
+style.effects.heavenRush/cloudSea.name=Cloud Sea
