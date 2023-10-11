@@ -1,12 +1,7 @@
-﻿using System;
-
-namespace Celeste.Mod.HeavenRush;
+﻿namespace Celeste.Mod.HeavenRush;
 
 public class HeavenRushModule : EverestModule {
     public static HeavenRushModule Instance { get; private set; }
-
-    public override Type SessionType => typeof(HeavenRushSession);
-    public static HeavenRushSession Session => (HeavenRushSession) Instance._Session;
 
     public HeavenRushModule() {
         Instance = this;
@@ -19,17 +14,7 @@ public class HeavenRushModule : EverestModule {
 #endif
     }
 
-    public override void Load() {
-        InputExtensions.Load();
-        MapMetaExtensions.Load();
-        PlayerExtensions.Load();
-    }
+    public override void Load() { }
 
-    public override void Initialize() { }
-
-    public override void Unload() {
-        InputExtensions.Unload();
-        MapMetaExtensions.Unload();
-        PlayerExtensions.Unload();
-    }
+    public override void Unload() { }
 }

@@ -1,23 +1,2 @@
-entities.heavenRush/abilityCard.placements.name.yellow=Ability Card (Yellow)
-entities.heavenRush/abilityCard.placements.name.blue=Ability Card (Blue)
-entities.heavenRush/abilityCard.placements.name.green=Ability Card (Green)
-entities.heavenRush/abilityCard.placements.name.red=Ability Card (Red)
-entities.heavenRush/abilityCard.placements.name.white=Ability Card (White)
-
-entities.heavenRush/surfPlatform.placements.name.platform=Surf Platform
-
-entities.heavenRush/demon.placements.name.grounded=Demon (Grounded)
-entities.heavenRush/demon.placements.name.aerial=Demon (Aerial)
-
-entities.heavenRush/rushGoal.placements.name.goal=Rush Goal
-
-entities.heavenRush/rushBerry.placements.name.berry=Rush Berry
-
-entities.heavenRush/rushLevelController.placements.name.controller=Rush Level Controller
-
-entities.heavenRush/levelTitleMessage.placements.name.message=Level Title Message
-
-triggers.heavenRush/trueNoGrabTrigger.placements.name.trigger=True No Grab Trigger
-
 style.effects.heavenRush/waterPlane.name=Water Plane
 style.effects.heavenRush/cloudSea.name=Cloud Sea
