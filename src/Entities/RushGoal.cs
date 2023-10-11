@@ -86,7 +86,9 @@ public class RushGoal : Entity {
         tween.OnComplete = _ => {
             Glitch.Value = 0.5f;
             Engine.TimeRate = 1f;
-            ((Level) Scene).WarpToNextLevel();
+            
+            if (!player.Dead)
+                ((Level) Scene).WarpToNextLevel();
         };
         
         Add(tween);
