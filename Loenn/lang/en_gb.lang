@@ -1,2 +1,4 @@
 style.effects.heavenRush/waterPlane.name=Water Plane
 style.effects.heavenRush/cloudSea.name=Cloud Sea
+
+entities.heavenRush/levelTitleMessage.placements.name.message=Level Title Message
