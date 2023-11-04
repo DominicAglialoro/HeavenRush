@@ -2,6 +2,8 @@
   Name: HeavenRush
   Version: 0.1.0
   Dependencies:
+    - Name: CommunalHelper
+      Version: 1.18.4
     - Name: Everest
       Version: 1.4174.0
     - Name: ExtendedVariantMode
