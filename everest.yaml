@@ -10,6 +10,8 @@
       Version: 0.27.0
     - Name: FrostHelper
       Version: 1.45.5
+    - Name: GravityHelper
+      Version: 1.1.50
     - Name: MaxHelpingHand
       Version: 1.28.1
     - Name: ProgHelper

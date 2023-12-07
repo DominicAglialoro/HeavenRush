@@ -48,7 +48,7 @@ public class CloudSea : Backdrop {
 
         for (int i = 0; i < layerCount; i++) {
             var waves = new Wave[waveCount];
-            float depth = (float) i / (layerCount - 1);
+            float depth = layerCount > 1 ? (float) i / (layerCount - 1) : 0f;
             float scale = MathHelper.Lerp(waveNearScale, waveFarScale, depth);
 
             for (int j = 0; j < waveCount; j++) {

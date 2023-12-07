@@ -6,3 +6,11 @@ bryse0n
 
 kat
 	tilesets/bgMarble
+	
+Bissy
+	bgs/silhouette
+	bgs/frontbuildings
+	bgs/middlebuildings
+
+PowerAv
+	tilesets/Av_Factory
