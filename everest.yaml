@@ -1,5 +1,4 @@
-- DLL: src/bin/net452/HeavenRush.dll
-  Name: HeavenRush
+- Name: HeavenRush
   Version: 0.1.0
   Dependencies:
     - Name: CommunalHelper
