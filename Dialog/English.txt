@@ -2,6 +2,8 @@ HeavenRush=Heaven Rush
 
 heavenRush_HeavenRush=Heaven Rush
 
+heavenRush_HeavenRush_postcard=Read the {#ff2222}readme.txt{#} file included in the project's .zip folder for important information about the map.
+
 HEAVEN_RUSH_TUTORIAL_ULTRA=Ultra
 HEAVEN_RUSH_TUTORIAL_PRESERVE_SPEED=Preserve Ultra Speed
 HEAVEN_RUSH_TUTORIAL_USE_CARD=Use Card
