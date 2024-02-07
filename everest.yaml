@@ -3,6 +3,8 @@
   Dependencies:
     - Name: CommunalHelper
       Version: 1.18.4
+    - Name: EeveeHelper
+      Version: 1.9.1
     - Name: Everest
       Version: 1.4174.0
     - Name: ExtendedVariantMode
