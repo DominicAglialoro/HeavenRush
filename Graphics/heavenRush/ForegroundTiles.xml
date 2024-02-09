@@ -307,5 +307,5 @@
   
   <Tileset id="r" copy="y" path="heavenRush/Av_Factory" sound="7"/>
   
-  <Tileset id="s" copy="z" path="heavenRush/ridge" sound="8"/>
+  <Tileset id="s" copy="z" path="heavenRush/cliffsideGray" sound="8"/>
 </Data>

@@ -1,16 +1,19 @@
-Flagpole1up
-	tilesets/Skytower
-	
-bryse0n
-	bgs/cloud_*
-
-kat
-	tilesets/bgMarble
-	
 Bissy
 	bgs/silhouette
 	bgs/frontbuildings
 	bgs/middlebuildings
+
+bryse0n
+	bgs/cloud_*
+	
+Flagpole1up
+	tilesets/Skytower
+	
+Juno
+	bgs/bg7
+
+kat
+	tilesets/bgMarble
 
 PowerAv
 	tilesets/Av_Factory
