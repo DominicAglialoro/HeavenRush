@@ -2,6 +2,10 @@ HeavenRush=Heaven Rush
 
 heavenRush_HeavenRush=Heaven Rush
 
+heavenRush_HeavenRush_2_1_Breach=Hanging Gardens
+heavenRush_HeavenRush_3_1_Metro=Heaven's Edge
+heavenRush_HeavenRush_4_1_Boof=???
+
 heavenRush_HeavenRush_postcard=Read the {#ff2222}readme.txt{#} file included in the project's .zip folder for important information about the map.
 
 HEAVEN_RUSH_TUTORIAL_ULTRA=Ultra
