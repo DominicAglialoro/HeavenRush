@@ -11,6 +11,8 @@
       Version: 0.27.0
     - Name: FrostHelper
       Version: 1.45.5
+    - Name: FurryHelper
+      Version: 1.0.6
     - Name: GravityHelper
       Version: 1.1.50
     - Name: MaxHelpingHand
