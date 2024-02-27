@@ -13,14 +13,12 @@
       Version: 1.6.18
     - Name: FrostHelper
       Version: 1.45.5
-    - Name: FurryHelper
-      Version: 1.0.6
     - Name: GravityHelper
       Version: 1.1.50
     - Name: MaxHelpingHand
       Version: 1.28.1
     - Name: ProgHelper
-      Version: 0.1.0
+      Version: 1.0.0
     - Name: RushHelper
       Version: 0.1.0
     - Name: VivHelper
