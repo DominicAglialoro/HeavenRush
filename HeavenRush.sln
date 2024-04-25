@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HeavenRush", "src\HeavenRush.csproj", "{C25BDCF5-8CD4-4FDE-9E5C-DC162C1885F8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C25BDCF5-8CD4-4FDE-9E5C-DC162C1885F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C25BDCF5-8CD4-4FDE-9E5C-DC162C1885F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C25BDCF5-8CD4-4FDE-9E5C-DC162C1885F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C25BDCF5-8CD4-4FDE-9E5C-DC162C1885F8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,5 +1,6 @@
 - Name: HeavenRush
   Version: 0.1.0
+  DLL: src/bin/net7/HeavenRush.dll
   Dependencies:
     - Name: CommunalHelper
       Version: 1.18.4

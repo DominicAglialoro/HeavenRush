@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+        <CelestePath>..\..\..</CelestePath>
+        <TargetFramework>net7</TargetFramework>
+        <OutputPath>bin</OutputPath>
+        <PackageId>HeavenRush</PackageId>
+        <RootNamespace>HeavenRush</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="MonoMod" Version="22.7.31.1" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.1.0" PrivateAssets="all" ExcludeAssets="runtime">
+            <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="Celeste">
+            <HintPath>$(CelestePath)\Celeste.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="FNA">
+            <HintPath>$(CelestePath)\FNA.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="MMHOOK_Celeste">
+            <HintPath>$(CelestePath)\MMHOOK_Celeste.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+</Project>
