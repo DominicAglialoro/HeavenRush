@@ -1,6 +1,6 @@
-- Name: HeavenRush
+- DLL: src/bin/net7/HeavenRush.dll
+  Name: HeavenRush
   Version: 0.1.0
-  DLL: src/bin/net7/HeavenRush.dll
   Dependencies:
     - Name: CommunalHelper
       Version: 1.20.2
@@ -26,3 +26,5 @@
       Version: 1.14.6
     - Name: VortexHelper
       Version: 1.2.14
+    - Name: XaphanHelper
+      Version: 1.0.70

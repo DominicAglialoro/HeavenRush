@@ -134,6 +134,5 @@
   <Tileset id="c" copy="z" path="bgSummit"/>
   <Tileset id="d" copy="z" path="bgCore"/>
   <Tileset id="e" copy="z" path="bgLostLevels"/>
-  
-  <Tileset id="p" copy="5" path="heavenRush/bgMarble"/>
+
 </Data>
