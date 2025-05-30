@@ -3,8 +3,6 @@
   Dependencies:
     - Name: CommunalHelper
       Version: 1.20.2
-    - Name: EeveeHelper
-      Version: 1.11.1
     - Name: Everest
       Version: 1.4783.0
     - Name: ExtendedVariantMode
@@ -13,8 +11,6 @@
       Version: 1.6.22
     - Name: FrostHelper
       Version: 1.50.6
-    - Name: GravityHelper
-      Version: 1.2.15
     - Name: MaxHelpingHand
       Version: 1.30.2
     - Name: ProgHelper
@@ -23,7 +19,5 @@
       Version: 0.1.0
     - Name: VivHelper
       Version: 1.14.6
-    - Name: VortexHelper
-      Version: 1.2.14
     - Name: XaphanHelper
       Version: 1.0.70
