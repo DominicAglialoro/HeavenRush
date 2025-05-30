@@ -2,12 +2,11 @@ HeavenRush=Heaven Rush
 
 heavenRush_GlassOcean=Glass Ocean
 
-heavenRush_HeavenRush_postcard=Read the {#ff2222}readme.txt{#} file included in the project's .zip folder for important information about the map.
-
-HEAVEN_RUSH_TUTORIAL_ULTRA=Ultra
-HEAVEN_RUSH_TUTORIAL_PRESERVE_SPEED=Preserve Ultra Speed
+HEAVEN_RUSH_TUTORIAL_KILL_TO_CLEAR=Kill All to Activate Exit
+HEAVEN_RUSH_TUTORIAL_TIME_LIMIT=Clear in Time Limit
 HEAVEN_RUSH_TUTORIAL_USE_CARD=Use Card
 HEAVEN_RUSH_TUTORIAL_HYPER=Hyper
+HEAVEN_RUSH_TUTORIAL_CORNERBOOST="Corner"boost
 HEAVEN_RUSH_TUTORIAL_MULTIBOOST=Multiboost
 HEAVEN_RUSH_TUTORIAL_ULTRA_ANYWHERE=Ultra Anywhere
 HEAVEN_RUSH_TUTORIAL_BOUNCE=Bounce
