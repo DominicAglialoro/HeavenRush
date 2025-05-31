@@ -141,7 +141,7 @@
     </Metadata>
   </player>
 
-  <player_no_backpack copy="player" path="characters/player_no_backpack/heavenRush/">
+  <player_no_backpack copy="player" path="characters/player_no_backpack/">
     <Anim id="idle" path="idle" delay="0.1" goto="idle"/>
     <Anim id="idleA" path="idleA" delay="0.12" goto="idle"/>
     <Anim id="idleB" path="idleB" delay="0.16" goto="idle"/>
@@ -258,10 +258,10 @@
     </Metadata>
   </badeline>
 
-  <bird path="characters/bird/heavenRush/" start="idle">
+  <bird path="characters/bird/" start="idle">
     <Origin x="16" y="24"/>
 
-    <Anim id="idle" path="crow" delay="1" frames="0" goto="idle"/>
+    <Anim id="idle" path="crow" delay="1" frames="0" goto="idle,peck"/>
     <Anim id="idleRarePeck" path="crow" delay="1" frames="0" goto="idleRarePeck,idleRarePeck,idleRarePeck,idleRarePeck,peckRare"/>
     <Anim id="croak" path="crow" delay="0.08" frames="0-13" goto="idle"/>
     <Anim id="peck" path="crow" delay="0.08" frames="14-26" goto="idle"/>
