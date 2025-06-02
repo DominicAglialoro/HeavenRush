@@ -303,6 +303,8 @@
     <set mask="center" tiles="5,7;5,8;5,9;5,10;5,11;5,12;5,13;5,14"/>
   </Tileset>
   
+  <Tileset id="q" copy="p" path="heavenRush/whiteStoneOut" ignores="p"/>
+  
   <Tileset id="t" path="heavenRush/glassBlock" sound="14" debris="heavenRush/glassBlock">
 	<set mask="x0x-011-x1x" tiles="0,0"/>
 	<set mask="x0x-111-x1x" tiles="1,0"/>
@@ -329,4 +331,6 @@
 	<set mask="padding" tiles="1,1"/> 
 	<set mask="center" tiles="1,1"/> 
   </Tileset>
+  
+  <Tileset id="u" copy="t" path="heavenRush/gold" ignores="*"/>
 </Data>
