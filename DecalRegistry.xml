@@ -1,0 +1,11 @@
+<decals>
+	<decal path="heavenRush/halfTileWhite">
+		<solid x="-4" y="-4" width="8" height="8" index="8"/>
+	</decal>
+	<decal path="heavenRush/aqueduct*">
+		<depth value="8999"/>
+	</decal>
+	<decal path="heavenRush/bgPillar*">
+		<depth value="9001"/>
+	</decal>
+</decals>

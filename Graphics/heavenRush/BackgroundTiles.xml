@@ -135,7 +135,7 @@
   <Tileset id="d" copy="z" path="bgCore"/>
   <Tileset id="e" copy="z" path="bgLostLevels"/>
   
-  <Tileset id="f" copy="z" path="heavenRush/bgWhiteStone"/>
-  <Tileset id="g" copy="z" path="heavenRush/bgWhiteStoneIn" ignores="f"/>
+  <Tileset id="f" copy="z" path="heavenRush/bgStoneWhite"/>
+  <Tileset id="g" copy="z" path="heavenRush/bgStoneWhiteIn" ignores="f"/>
 
 </Data>

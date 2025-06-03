@@ -258,10 +258,10 @@
     </Metadata>
   </badeline>
 
-  <bird path="characters/bird/" start="idle">
+  <bird path="characters/bird/heavenRush/" start="idle">
     <Origin x="16" y="24"/>
 
-    <Anim id="idle" path="crow" delay="1" frames="0" goto="idle,peck"/>
+    <Anim id="idle" path="crow" delay="1" frames="0" goto="idle"/>
     <Anim id="idleRarePeck" path="crow" delay="1" frames="0" goto="idleRarePeck,idleRarePeck,idleRarePeck,idleRarePeck,peckRare"/>
     <Anim id="croak" path="crow" delay="0.08" frames="0-13" goto="idle"/>
     <Anim id="peck" path="crow" delay="0.08" frames="14-26" goto="idle"/>

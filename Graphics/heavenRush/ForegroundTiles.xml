@@ -263,7 +263,7 @@
 
   <Tileset id="n" copy="z" path="scifi"/>
 
-  <Tileset id="p" path="heavenRush/whiteStone" sound="8">
+  <Tileset id="p" path="heavenRush/stoneWhite" sound="8">
 	<set mask="x0x-111-x1x" tiles="0,0;1,0;2,0;3,0"/>
     <set mask="x1x-111-x0x" tiles="0,1;1,1;2,1;3,1"/>
     <set mask="x1x-011-x1x" tiles="0,2;1,2;2,2;3,2"/>
@@ -303,7 +303,11 @@
     <set mask="center" tiles="5,7;5,8;5,9;5,10;5,11;5,12;5,13;5,14"/>
   </Tileset>
   
-  <Tileset id="q" copy="p" path="heavenRush/whiteStoneOut" ignores="p"/>
+  <Tileset id="q" copy="p" path="heavenRush/stoneWhiteOut" ignores="p,r"/>
+  
+  <Tileset id="r" path="heavenRush/stoneWhitePlain">
+	<set mask="xxx-x1x-xxx" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/>
+  </Tileset>
   
   <Tileset id="t" path="heavenRush/glassBlock" sound="14" debris="heavenRush/glassBlock">
 	<set mask="x0x-011-x1x" tiles="0,0"/>
