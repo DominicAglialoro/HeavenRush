@@ -307,6 +307,8 @@
   
   <Tileset id="r" path="heavenRush/stoneWhitePlain">
 	<set mask="xxx-x1x-xxx" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/>
+	<set mask="padding" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/> 
+	<set mask="center" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/> 
   </Tileset>
   
   <Tileset id="t" path="heavenRush/glassBlock" sound="14" debris="heavenRush/glassBlock">
