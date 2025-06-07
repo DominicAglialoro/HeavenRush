@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Sprites>
+
+<!-- This xml file allows you to change all sprites in the game just like regular Skin Mod Helper -->
+<!-- These file paths are completely arbitrary. You can change the file structure to fit your liking. -->
+<!-- Remember to change the filepaths and your character id. -->
+
+  <lookout path="heavenRush/neon/objects/lookout/" start="idle">
+    <Justify x=".5" y="1" />
+    
+    <Loop id="idle" path="lookout" delay="0.1" frames="5"/>
+    <Anim id="lookRight" path="lookout" delay="0.08" frames="0,1,2,3" goto="looking"/>
+    <Anim id="lookLeft" path="lookout" delay="0.08" frames="0,1,2,3" goto="looking"/>
+    <Loop id="looking" path="lookout" delay="0.08" frames="4"/>
+    <Loop id="lookingUp" path="lookout" frames="4"/>
+    <Loop id="lookingUpRight" path="lookout" frames="4"/>
+    <Loop id="lookingRight" path="lookout" frames="4"/>
+    <Loop id="lookingDownRight" path="lookout" frames="4"/>
+    <Loop id="lookingDown" path="lookout" frames="4"/>
+    <Loop id="lookingDownLeft" path="lookout" frames="4"/>
+    <Loop id="lookingLeft" path="lookout" frames="4"/>
+    <Loop id="lookingUpLeft" path="lookout" frames="4"/>
+
+  </lookout>
+</Sprites>

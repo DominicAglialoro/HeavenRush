@@ -2,14 +2,13 @@ HeavenRush=Heaven Rush
 
 heavenRush_GlassOcean=Glass Ocean
 
+HEAVEN_RUSH_SIGN_INFO=This map uses the Ultra Protection consistency and leniency variant, and a few others. Feel free to buffer your jumps when performing ultras.
+HEAVEN_RUSH_SIGN_INPUT=
+The Use Card input can be rebound in Mod Options > Rush Helper > Keyboard / Controller Config.
+As this map does not requre a Crouch Dash or secondary Jump bind, you may consider replacing one of these binds.
+
 HEAVEN_RUSH_TUTORIAL_KILL_TO_CLEAR=Kill All to Activate Exit
 HEAVEN_RUSH_TUTORIAL_TIME_LIMIT=Clear in Time Limit
 HEAVEN_RUSH_TUTORIAL_USE_CARD=Use Card
 HEAVEN_RUSH_TUTORIAL_HYPER=Hyper
 HEAVEN_RUSH_TUTORIAL_CORNERBOOST="Corner"boost
-HEAVEN_RUSH_TUTORIAL_MULTIBOOST=Multiboost
-HEAVEN_RUSH_TUTORIAL_ULTRA_ANYWHERE=Ultra Anywhere
-HEAVEN_RUSH_TUTORIAL_BOUNCE=Bounce
-HEAVEN_RUSH_TUTORIAL_VERTICAL_MULTIBOOST=Vertical Multiboost
-HEAVEN_RUSH_TUTORIAL_ACCELERATE=Accelerate
-HEAVEN_RUSH_TUTORIAL_DOUBLE_MULTIBOOST=Double Multiboost

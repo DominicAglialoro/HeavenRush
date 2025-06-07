@@ -8,3 +8,6 @@ bryse0n
 	
 Juno
 	bgs/bg7
+	
+KoseiDiamond
+	decals/sign_text

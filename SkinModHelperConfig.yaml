@@ -1,3 +1,4 @@
 - SkinName: "neon"
   Player_List: true
   Character_ID: "neon"
+  OtherSprite_Path: "heavenRush/neon"
