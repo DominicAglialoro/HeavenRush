@@ -2,6 +2,9 @@ HeavenRush=Heaven Rush
 
 heavenRush_GlassOcean=Glass Ocean
 
+HEAVEN_RUSH_SIGN_CREDITS=
+This map uses art assets by bryse0n and KoseiDiamond.
+This map uses the following music tracks:{n}"Holy Ground" by Machine Girl{n}"Glass Ocean" by Machine Girl
 HEAVEN_RUSH_SIGN_INFO=This map uses the Ultra Protection consistency and leniency variant, and a few others. Feel free to buffer your jumps when performing ultras.
 HEAVEN_RUSH_SIGN_INPUT=
 The Use Card input can be rebound in Mod Options > Rush Helper > Keyboard / Controller Config.
