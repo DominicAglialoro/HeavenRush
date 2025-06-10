@@ -8,18 +8,18 @@
   <lookout path="heavenRush/neon/objects/lookout/" start="idle">
     <Justify x=".5" y="1" />
     
-    <Loop id="idle" path="lookout" delay="0.1" frames="5"/>
-    <Anim id="lookRight" path="lookout" delay="0.08" frames="0,1,2,3" goto="looking"/>
-    <Anim id="lookLeft" path="lookout" delay="0.08" frames="0,1,2,3" goto="looking"/>
+    <Loop id="idle" path="lookout" delay="0.1" frames="5*9,6"/>
+    <Anim id="lookRight" path="lookout" delay="0.08" frames="0-4" goto="looking"/>
+    <Anim id="lookLeft" path="lookout" delay="0.08" frames="15-17,3,4" goto="looking"/>
     <Loop id="looking" path="lookout" delay="0.08" frames="4"/>
-    <Loop id="lookingUp" path="lookout" frames="4"/>
-    <Loop id="lookingUpRight" path="lookout" frames="4"/>
-    <Loop id="lookingRight" path="lookout" frames="4"/>
-    <Loop id="lookingDownRight" path="lookout" frames="4"/>
-    <Loop id="lookingDown" path="lookout" frames="4"/>
-    <Loop id="lookingDownLeft" path="lookout" frames="4"/>
-    <Loop id="lookingLeft" path="lookout" frames="4"/>
-    <Loop id="lookingUpLeft" path="lookout" frames="4"/>
+    <Loop id="lookingUp" path="lookout" frames="7"/>
+    <Loop id="lookingUpRight" path="lookout" frames="8"/>
+    <Loop id="lookingRight" path="lookout" frames="9"/>
+    <Loop id="lookingDownRight" path="lookout" frames="10"/>
+    <Loop id="lookingDown" path="lookout" frames="11"/>
+    <Loop id="lookingDownLeft" path="lookout" frames="12"/>
+    <Loop id="lookingLeft" path="lookout" frames="13"/>
+    <Loop id="lookingUpLeft" path="lookout" frames="14"/>
 
   </lookout>
 </Sprites>

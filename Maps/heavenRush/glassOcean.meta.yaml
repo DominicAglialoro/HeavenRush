@@ -1,3 +1,29 @@
+Mountain:
+    Idle:
+        Position: [ 0.0, 7.5, 14.6 ]
+        Target: [ 0.0, 7, 12.7 ]
+    Select:
+        Position: [ 4.5, 6.5, 14.6 ]
+        Target: [ 4.5, 6, 12.7 ]
+    Zoom:
+        Position: [ 0.0, 7.5, 14.6 ]
+        Target: [ 0.0, 7, 12.7 ]
+    Cursor: [ 0.0, -100 , 0.0 ]
+    MountainModelDirectory: Mountain/heavenRush
+    MountainTextureDirectory: heavenRush
+    Rotate: false
+    ShowSnow: false
 CompleteScreen:
+    Atlas: "Endscreens/heavenRush"
+    Start: [ 0.0, 0.0 ]
+    Center: [ 0.0, 0.0 ]
+    Title:
+        ASide: 'HEAVEN_RUSH_MISSION_COMPLETE'
+    Layers:
+      - Type: "layer"
+        Images: [ "glassOcean" ]
+        Position: [ 0.0, 0.0 ]
+        Scroll: [ 0.0 ]
+      - Type: 'ui'
     MusicBySide:
     - event:/heavenRush/music/machine_girl_mission_complete
