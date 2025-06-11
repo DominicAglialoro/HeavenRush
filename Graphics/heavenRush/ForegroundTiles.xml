@@ -340,8 +340,8 @@
   
   <Tileset id="u" copy="t" path="heavenRush/gold" ignores="*"/>
   
-  <Tileset id="v" copy="p" path="heavenRush/stoneBrown"/>
-  <Tileset id="w" copy="p" path="heavenRush/stoneBrownIn" ignores="v,x"/>
-  <Tileset id="x" copy="r" path="heavenRush/stoneBrownPlain"/>
-  <Tileset id="y" copy="p" path="heavenRush/stoneBrownTrim" ignores="v,x"/>
+  <Tileset id="v" copy="p" path="heavenRush/stoneBrown" sound="8"/>
+  <Tileset id="w" copy="p" path="heavenRush/stoneBrownIn" ignores="v,o"/>
+  <Tileset id="o" copy="r" path="heavenRush/stoneBrownPlain"/>
+  <Tileset id="s" copy="p" path="heavenRush/stoneBrownTrim" ignores="v,o"/>
 </Data>

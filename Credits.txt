@@ -6,6 +6,10 @@ Bissy
 bryse0n
 	bgs/cloud_*
 	
+Flagpole1up
+	decals/intermediate_bush_*
+	decals/moss_*
+	
 Juno
 	bgs/bg7
 	
