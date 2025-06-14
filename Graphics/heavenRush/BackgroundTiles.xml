@@ -43,4 +43,9 @@
   
   <Tileset id="3" copy="1" path="heavenRush/bgStoneBrown"/>
   <Tileset id="4" copy="1" path="heavenRush/bgStoneBrownIn" ignores="3"/>
+  
+  <Tileset id="5" copy="1" path="heavenRush/bgWindowsTop"/>
+  <Tileset id="6" copy="1" path="heavenRush/bgWindowsMid"/>
+  
+  <Tileset id="7" copy="1" path="heavenRush/bgGirderNoSnow"/>
 </Data>

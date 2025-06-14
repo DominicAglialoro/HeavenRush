@@ -15,3 +15,7 @@ Juno
 	
 KoseiDiamond
 	decals/sign_text
+	
+Zurcus
+	tilesets/girderNoSnow
+	tilesets/bgGirderNoSnow

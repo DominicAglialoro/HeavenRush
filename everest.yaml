@@ -1,6 +1,8 @@
 - Name: HeavenRush
   Version: 0.1.0
   Dependencies:
+    - Name: AdventureHelper
+      Version: 1.6.0
     - Name: CommunalHelper
       Version: 1.23.0
     - Name: Everest

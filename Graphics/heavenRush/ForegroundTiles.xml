@@ -119,18 +119,20 @@
     <set mask="center" tiles="5,12"/>
   </Tileset>
   
-  <Tileset id="a" copy="1" path="heavenRush/windows" sound="7"/>
-  <Tileset id="b" path="heavenRush/windowsBound" ignores="*">
-	<set mask="x0x-010-x1x" tiles="0,0;1,0;2,0;3,0"/>
-	<set mask="x1x-010-x0x" tiles="0,1;1,1;2,1;3,1"/>
-	<set mask="x0x-011-x0x" tiles="0,2;1,2;2,2;3,2"/>
-	<set mask="x0x-110-x0x" tiles="0,3;1,3;2,3;3,3"/>
-	<set mask="x0x-111-x0x" tiles="0,4;1,4;2,4;3,4"/>
-	<set mask="x1x-010-x1x" tiles="0,5;1,5;2,5;3,5"/>
-	
-	<set mask="padding" tiles="0,6;1,6;2,6;3,6"/>
-	<set mask="center" tiles="0,6;1,6;2,6;3,6"/>
+  <Tileset id="a" copy="1" path="heavenRush/windowsPurpleTop" sound="7" ignores="*" ignoreExceptions="b,f,g"/>
+  <Tileset id="b" copy="1" path="heavenRush/windowsPurpleMid" sound="7" ignores="*" ignoreExceptions="a,f,g"/>
+  
+  <Tileset id="f" path="heavenRush/windowsPurpleTopPlain">
+	<set mask="xxx-x1x-xxx" tiles="0,0;0,1;0,2;0,3"/>
+	<set mask="padding" tiles="0,0;0,1;0,2;0,3"/> 
+	<set mask="center" tiles="0,0;0,1;0,2;0,3"/> 
   </Tileset>
+  <Tileset id="g" copy="f" path="heavenRush/windowsPurpleMidPlain"/>
+  
+  <Tileset id="c" copy="1" path="heavenRush/concrete" sound="8" ignores="*" ignoreExceptions="d"/>
+  <Tileset id="d" copy="1" path="heavenRush/concreteTrim" sound="8" ignores="*"/>
+  
+  <Tileset id="e" copy="1" path="heavenRush/girderNoSnow" sound="7"/>
 
   <Tileset id="A" copy="1" path="wood" sound="5"/>
   <Tileset id="B" copy="4" path="heavenRush/glassBlock" sound="32" debris="heavenRush/glassBlock"/>
