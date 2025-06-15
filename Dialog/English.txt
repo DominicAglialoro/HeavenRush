@@ -1,6 +1,9 @@
 HeavenRush=Heaven Rush
 
-heavenRush_GlassOcean=Glass Ocean
+heavenRush_0_glassOcean=Glass Ocean
+heavenRush_1_hangingGardens=Hanging Gardens
+heavenRush_2_heavensEdge=Heaven's Edge
+heavenRush_3_qqq=???
 
 HEAVEN_RUSH_SIGN_CREDITS=
 This map uses art assets by bryse0n and KoseiDiamond.

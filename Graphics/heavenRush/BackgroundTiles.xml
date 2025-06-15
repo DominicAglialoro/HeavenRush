@@ -48,4 +48,13 @@
   <Tileset id="6" copy="1" path="heavenRush/bgWindowsMid"/>
   
   <Tileset id="7" copy="1" path="heavenRush/bgGirderNoSnow"/>
+  
+  <Tileset id="8" copy="1" path="bgBrick"/>
+  <Tileset id="9" copy="1" path="bgBrickRuined"/>
+  
+  <Tileset id="A" path="heavenRush/bgEmpty">
+	<set mask="xxx-x1x-xxx" tiles="0,0"/>
+	<set mask="padding" tiles="0,0"/>
+	<set mask="center" tiles="0,0"/>
+  </Tileset>
 </Data>

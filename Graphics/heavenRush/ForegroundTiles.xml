@@ -38,9 +38,7 @@
     <set mask="padding" tiles="5,0;5,1;5,2;5,3;5,4;5,5;5,6;5,7;5,8;5,9;5,10;5,11;5,12;5,13;5,14"/>
     <set mask="center" tiles="5,0;5,1;5,2;5,3;5,4;5,5;5,6;5,7;5,8;5,9;5,10;5,11;5,12;5,13;5,14"/>
   </Tileset>
-  
   <Tileset id="2" copy="1" path="heavenRush/stoneWhiteOut" ignores="1,3"/>
-  
   <Tileset id="3" path="heavenRush/stoneWhitePlain">
 	<set mask="xxx-x1x-xxx" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/>
 	<set mask="padding" tiles="0,0;0,1;0,2;0,3;0,4;0,5;0,6"/> 
@@ -78,7 +76,6 @@
   <Tileset id="6" copy="1" path="heavenRush/stoneBrownIn" ignores="5,7"/>
   <Tileset id="7" copy="3" path="heavenRush/stoneBrownPlain"/>
   <Tileset id="8" copy="1" path="heavenRush/stoneBrownTrim" ignores="5,7" sound="8"/>
-  
   <Tileset id="9" path="heavenRush/stoneBrownGrass" sound="33">
 	<set mask="x0x-111-x1x" tiles="0,0;1,0;2,0;3,0" sprites="grass_top_a"/>
     <set mask="x1x-111-x0x" tiles="0,1;1,1;2,1;3,1"/>
@@ -119,20 +116,33 @@
     <set mask="center" tiles="5,12"/>
   </Tileset>
   
-  <Tileset id="a" copy="1" path="heavenRush/windowsPurpleTop" sound="7" ignores="*" ignoreExceptions="b,f,g"/>
-  <Tileset id="b" copy="1" path="heavenRush/windowsPurpleMid" sound="7" ignores="*" ignoreExceptions="a,f,g"/>
-  
-  <Tileset id="f" path="heavenRush/windowsPurpleTopPlain">
+  <Tileset id="a" copy="1" path="heavenRush/windowsPurpleTop" sound="7" ignores="*" ignoreExceptions="b,c,d"/>
+  <Tileset id="b" copy="1" path="heavenRush/windowsPurpleMid" sound="7" ignores="*" ignoreExceptions="a,c,d"/>
+  <Tileset id="c" path="heavenRush/windowsPurpleTopPlain">
 	<set mask="xxx-x1x-xxx" tiles="0,0;0,1;0,2;0,3"/>
 	<set mask="padding" tiles="0,0;0,1;0,2;0,3"/> 
 	<set mask="center" tiles="0,0;0,1;0,2;0,3"/> 
   </Tileset>
-  <Tileset id="g" copy="f" path="heavenRush/windowsPurpleMidPlain"/>
+  <Tileset id="d" copy="c" path="heavenRush/windowsPurpleMidPlain"/>
   
-  <Tileset id="c" copy="1" path="heavenRush/concrete" sound="8" ignores="*" ignoreExceptions="d"/>
-  <Tileset id="d" copy="1" path="heavenRush/concreteTrim" sound="8" ignores="*"/>
+  <Tileset id="e" copy="1" path="heavenRush/concrete" sound="8" ignores="*" ignoreExceptions="d"/>
+  <Tileset id="f" copy="1" path="heavenRush/concreteTrim" sound="8" ignores="*"/>
   
-  <Tileset id="e" copy="1" path="heavenRush/girderNoSnow" sound="7"/>
+  <Tileset id="g" copy="1" path="heavenRush/girderNoSnow" sound="7"/>
+  
+  <Tileset id="h" copy="1" path="heavenRush/stoneGray" sound="8"/>
+  <Tileset id="i" copy="1" path="heavenRush/stoneGrayOut" ignores="h,j"/>
+  <Tileset id="j" copy="3" path="heavenRush/stoneGrayPlain"/>
+  
+  <Tileset id="k" copy="1" path="heavenRush/windowsGreenTop" sound="7" ignores="*" ignoreExceptions="l,m,n"/>
+  <Tileset id="l" copy="1" path="heavenRush/windowsGreenMid" sound="7" ignores="*" ignoreExceptions="k,m,n"/>
+  <Tileset id="m" copy="c" path="heavenRush/windowsGreenTopPlain"/>
+  <Tileset id="n" copy="c" path="heavenRush/windowsGreenMidPlain"/>
+  
+  <Tileset id="o" copy="1" path="tower" sound="8"/>
+  
+  <Tileset id="p" copy="1" path="heavenRush/concreteGreen" sound="8" ignores="*" ignoreExceptions="q"/>
+  <Tileset id="q" copy="1" path="heavenRush/concreteGreenTrim" sound="8" ignores="*"/>
 
   <Tileset id="A" copy="1" path="wood" sound="5"/>
   <Tileset id="B" copy="4" path="heavenRush/glassBlock" sound="32" debris="heavenRush/glassBlock"/>
