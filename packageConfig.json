@@ -1,0 +1,25 @@
+{
+	"include": [
+		"everest.yaml",
+		"DecalRegistry.xml",
+		"{dllDir}/{dllName}.dll",
+		"{dllDir}/{dllName}.pdb",
+		"{dllDir}/{dllName}.deps.json",
+		"SkinModHelperConfig.yaml",
+		"Ahorn/*",
+		"Assets/*",
+		"Audio/*",
+		"Dialog/*",
+		"Effects/*",
+		"Graphics/*",
+		"Loenn/*",
+		"Maps/*",
+		"Mountain/*",
+		"Tutorials/*"
+	],
+	"exclude": [
+		"Maps/heavenRush/1_hangingGardens.bin",
+		"Maps/heavenRush/2_heavensEdge.bin",
+		"Maps/heavenRush/3_qqq.bin"
+	]
+}
