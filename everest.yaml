@@ -1,5 +1,5 @@
 - Name: HeavenRush
-  Version: 1.0.5
+  Version: 1.0.7
   Dependencies:
     - Name: AdventureHelper
       Version: 1.6.0
@@ -16,7 +16,7 @@
     - Name: LuaCutscenes
       Version: 0.2.13
     - Name: MaxHelpingHand
-      Version: 1.36.2
+      Version: 1.37.0
     - Name: ProgHelper
       Version: 1.4.0
     - Name: RushHelper
