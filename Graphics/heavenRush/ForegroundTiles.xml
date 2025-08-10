@@ -75,7 +75,7 @@
   <Tileset id="5" copy="1" path="heavenRush/stoneBrown" sound="8"/>
   <Tileset id="6" copy="1" path="heavenRush/stoneBrownIn" ignores="5,7"/>
   <Tileset id="7" copy="3" path="heavenRush/stoneBrownPlain"/>
-  <Tileset id="8" copy="1" path="heavenRush/stoneBrownTrim" ignores="5,7" sound="8"/>
+  <Tileset id="8" copy="1" path="heavenRush/stoneBrownTrim" ignores="5,7,9" sound="8"/>
   <Tileset id="9" path="heavenRush/stoneBrownGrass" sound="33">
 	<set mask="x0x-111-x1x" tiles="0,0;1,0;2,0;3,0" sprites="grass_top_a"/>
     <set mask="x1x-111-x0x" tiles="0,1;1,1;2,1;3,1"/>
