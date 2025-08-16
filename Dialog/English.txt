@@ -5,13 +5,17 @@ heavenRush_1_hangingGardens=Hanging Gardens
 heavenRush_2_heavensEdge=Heaven's Edge
 heavenRush_3_qqq=???
 
-HEAVEN_RUSH_SIGN_CREDITS=
+HEAVEN_RUSH_SIGN_GLASS_OCEAN_CREDITS=
 This map uses art assets by bryse0n and KoseiDiamond.
 This map uses the following music tracks:{n}"Holy Ground" by Machine Girl{n}"Glass Ocean" by Machine Girl
-HEAVEN_RUSH_SIGN_INFO=This map uses the Ultra Protection consistency and leniency variant, and a few others. Feel free to buffer your jumps when performing ultras.
+HEAVEN_RUSH_SIGN_GLASS_OCEAN_INFO=This map uses the Ultra Protection consistency and leniency variant, and a few others. Feel free to buffer your jumps when performing ultras.
 HEAVEN_RUSH_SIGN_INPUT=
 The Use Card input can be rebound in Mod Options > Rush Helper > Keyboard / Controller Config.
 As this map does not requre a Crouch Dash or secondary Jump bind, you may consider replacing one of these binds.
+HEAVEN_RUSH_SIGN_HANGING_GARDENS_CREDITS=
+This map uses art assets by bryse0n, Flagpole1up, Juno, and KoseiDiamond.
+This map uses the following music track:{n}"Virtual Paradise" by Machine Girl
+HEAVEN_RUSH_SIGN_HANGING_GARDENS_INFO=In addition to the variants used in Glass Ocean, this map uses Liftboost Protection. You may safely buffer jumps off of moving blocks while still gaining liftboost.
 
 HEAVEN_RUSH_TUTORIAL_KILL_TO_CLEAR=Kill All to Activate Exit
 HEAVEN_RUSH_TUTORIAL_TIME_LIMIT=Clear in Time Limit

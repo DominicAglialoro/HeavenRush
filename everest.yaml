@@ -3,6 +3,8 @@
   Dependencies:
     - Name: AdventureHelper
       Version: 1.6.0
+    - Name: BrokemiaHelper
+      Version: 1.8.3
     - Name: CommunalHelper
       Version: 1.23.0
     - Name: Everest
