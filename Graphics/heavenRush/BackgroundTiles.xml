@@ -52,6 +52,8 @@
   <Tileset id="8" copy="1" path="bgBrick"/>
   <Tileset id="9" copy="1" path="bgBrickRuined"/>
   
+  <Tileset id="a" copy="1" path="bgDirt"/>
+  
   <Tileset id="A" path="heavenRush/bgEmpty">
 	<set mask="xxx-x1x-xxx" tiles="0,0"/>
 	<set mask="padding" tiles="0,0"/>
