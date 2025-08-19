@@ -18,7 +18,6 @@
 		"Tutorials/*"
 	],
 	"exclude": [
-		"Maps/heavenRush/1_hangingGardens.bin",
 		"Maps/heavenRush/2_heavensEdge.bin",
 		"Maps/heavenRush/3_qqq.bin"
 	]
