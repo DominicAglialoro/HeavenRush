@@ -9,6 +9,7 @@ HEAVEN_RUSH_SIGN_GLASS_OCEAN_CREDITS=
 This map uses art assets by bryse0n and KoseiDiamond.
 This map uses the following music tracks:{n}"Holy Ground" by Machine Girl{n}"Glass Ocean" by Machine Girl
 HEAVEN_RUSH_SIGN_GLASS_OCEAN_INFO=This map uses the Ultra Protection consistency and leniency variant, and a few others. Feel free to buffer your jumps when performing ultras.
+HEAVEN_RUSH_SIGN_GLASS_OCEAN_TIMER=To see the amount of time remaining after completing a screen, enable Mod Options > Rush Helper > Show Time Remaining On Clear.
 HEAVEN_RUSH_SIGN_INPUT=
 The Use Card input can be rebound in Mod Options > Rush Helper > Keyboard / Controller Config.
 As this map does not requre a Crouch Dash or secondary Jump bind, you may consider replacing one of these binds.
