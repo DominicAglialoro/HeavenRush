@@ -1,5 +1,5 @@
 - Name: HeavenRush
-  Version: 1.1.2
+  Version: 1.1.3
   Dependencies:
     - Name: AdventureHelper
       Version: 1.6.0
@@ -22,7 +22,7 @@
     - Name: ProgHelper
       Version: 1.5.0
     - Name: RushHelper
-      Version: 1.1.0
+      Version: 1.1.1
     - Name: SkinModHelperPlus
       Version: 0.16.1
     - Name: XaphanHelper
