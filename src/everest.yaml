@@ -1,0 +1,6 @@
+- Name: src
+  Version: 0.1.0
+  DLL: bin/src.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.3471.0

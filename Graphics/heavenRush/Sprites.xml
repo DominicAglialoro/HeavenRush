@@ -184,7 +184,7 @@
   
   <!-- NPCs -->
 
-  <badeline path="characters/badeline/">
+  <badeline path="characters/badeline/heavenRush/">
     <Justify x=".5" y="1" />
     
     <Loop id="idle" path="idle" delay="0.1" />

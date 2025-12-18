@@ -1,5 +1,6 @@
 - Name: HeavenRush
-  Version: 1.1.5
+  Version: 1.2.0
+  DLL: src/bin/net8.0/HeavenRush.dll
   Dependencies:
     - Name: AdventureHelper
       Version: 1.6.0
@@ -25,5 +26,7 @@
       Version: 1.1.1
     - Name: SkinModHelperPlus
       Version: 0.16.1
+    - Name: SorbetHelper
+      Version: 1.8.2
     - Name: XaphanHelper
       Version: 1.0.76
