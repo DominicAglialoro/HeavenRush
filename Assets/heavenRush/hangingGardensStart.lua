@@ -10,6 +10,7 @@ function onEnd(level, wasSkipped)
     if wasSkipped then
 		playMusic("event:/heavenRush/music/machine_girl_virtual_paradise")
 		teleportTo(112, -64, "0_01_p")
+		coroutine.yield(player.Facing = 1)
     end
 	
 	player.ForceCameraUpdate = false

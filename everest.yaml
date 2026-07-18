@@ -1,32 +1,36 @@
-- Name: HeavenRush
+- DLL: src/bin/net8.0/HeavenRush.dll
+  Name: HeavenRush
   Version: 1.2.0
-  DLL: src/bin/net8.0/HeavenRush.dll
   Dependencies:
     - Name: AdventureHelper
       Version: 1.6.0
     - Name: BrokemiaHelper
-      Version: 1.8.3
+      Version: 1.8.5
     - Name: CommunalHelper
-      Version: 1.23.0
+      Version: 1.25.3
     - Name: Everest
-      Version: 1.5509.0
+      Version: 1.6397.0
     - Name: ExtendedVariantMode
-      Version: 0.41.1
+      Version: 0.50.2
     - Name: FlaglinesAndSuch
-      Version: 1.6.41
+      Version: 1.6.71
     - Name: FrostHelper
-      Version: 1.69.1
+      Version: 1.79.0
+    - Name: GravityHelper
+      Version: 1.2.28
     - Name: LuaCutscenes
       Version: 0.2.13
     - Name: MaxHelpingHand
-      Version: 1.37.0
+      Version: 1.40.5
     - Name: ProgHelper
-      Version: 1.5.0
+      Version: 1.5.5
     - Name: RushHelper
-      Version: 1.1.1
+      Version: 1.2.0
     - Name: SkinModHelperPlus
-      Version: 0.16.1
+      Version: 0.17.9
     - Name: SorbetHelper
-      Version: 1.8.2
+      Version: 1.9.2
+    - Name: VortexHelper
+      Version: 1.2.19
     - Name: XaphanHelper
-      Version: 1.0.76
+      Version: 1.0.79

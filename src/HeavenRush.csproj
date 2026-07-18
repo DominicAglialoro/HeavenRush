@@ -10,7 +10,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="MonoMod" Version="22.7.31.1" />
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.1.0" PrivateAssets="all" ExcludeAssets="runtime">
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.3" PrivateAssets="all" ExcludeAssets="runtime">
             <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>

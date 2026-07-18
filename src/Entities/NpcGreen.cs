@@ -6,6 +6,11 @@ namespace Celeste.Mod.HeavenRush;
 
 [CustomEntity("heavenRush/npcGreen")]
 public class NpcGreen : Entity {
+    private static readonly ParticleType GREEN_VANISH = new(BadelineOldsite.P_Vanish) {
+        Color = Color.DarkGreen,
+        Color2 = Color.Green
+    };
+
     private readonly Vector2[] nodes;
 
     private BadelineDummy dummy;
@@ -48,7 +53,7 @@ public class NpcGreen : Entity {
             dummy.Position = Vector2.Lerp(start, end, tween.Eased);
 
             if (Scene.OnInterval(0.03f))
-                SceneAs<Level>().ParticlesFG.Emit(BadelineOldsite.P_Vanish, 2, dummy.Position + new Vector2(0f, -6f), 2f * Vector2.One);
+                SceneAs<Level>().ParticlesFG.Emit(GREEN_VANISH, 2, dummy.Position + new Vector2(0f, -6f), 2f * Vector2.One);
 
             if (tween.Eased >= 0.1f && tween.Eased <= 0.9f && Scene.OnInterval(0.05f))
                 TrailManager.Add(dummy, Color.Green, 0.5f, false);

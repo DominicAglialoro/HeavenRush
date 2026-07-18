@@ -144,7 +144,7 @@
   <Tileset id="p" copy="1" path="heavenRush/concreteGreen" sound="8" ignores="*" ignoreExceptions="q"/>
   <Tileset id="q" copy="1" path="heavenRush/concreteGreenTrim" sound="8" ignores="*"/>
   
-  <Tileset id="r" path="dirt">
+  <Tileset id="r" path="dirt" sound="3">
 	<set mask="x0x-111-x1x" tiles="0,0;1,0;2,0;3,0"/>
     <set mask="x1x-111-x0x" tiles="0,1;1,1;2,1;3,1"/>
     <set mask="x1x-011-x1x" tiles="0,2;1,2;2,2;3,2"/>
