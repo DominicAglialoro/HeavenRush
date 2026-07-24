@@ -5,7 +5,7 @@
 	<decal path="heavenRush/bgPillar*">
 		<depth value="10002"/>
 	</decal>
-	<decal path="concreteTrimEnd">
+	<decal path="heavenRush/concreteTrimEnd">
 		<solid x="-2" y="-4" width="3" height="8" index="8"/>
 	</decal>
 	<decal path="heavenRush/halfTile*">
