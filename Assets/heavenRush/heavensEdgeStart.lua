@@ -2,7 +2,7 @@ function onBegin()
 	disableMovement()
     player.ForceCameraUpdate = true
 	player.Dashes = 1
-	runTo(-904)
+	runTo(768)
 	wait(0.5)
 	setFlag("c_fall_1", true)
 	wait(0.2)
@@ -27,6 +27,6 @@ function onEnd(level, wasSkipped)
 	if wasSkipped then
 		playMusic("event:/heavenRush/music/machine_girl_cloud_nine")
 		setDarkness(0.05)
-		teleportTo(-904, -64, "0_01_c")
+		teleportTo(768, -72, "0_01_c")
     end
 end
