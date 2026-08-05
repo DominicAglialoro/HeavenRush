@@ -17,6 +17,9 @@ HEAVEN_RUSH_SIGN_HANGING_GARDENS_CREDITS=
 This map uses art assets by bryse0n, Flagpole1up, Juno, and KoseiDiamond.
 This map uses the following music track:{n}"Virtual Paradise" by Machine Girl
 HEAVEN_RUSH_SIGN_HANGING_GARDENS_INFO=In addition to the variants used in Glass Ocean, this map uses Liftboost Protection. You may safely buffer jumps off of moving blocks while still gaining liftboost.
+HEAVEN_RUSH_SIGN_HEAVENS_EDGE_CREDITS=
+This map uses art assets by Bissy, bryse0n, Juno, KoseiDiamond, and Zurcus.
+This map uses the following music track:{n}"Cloud Nine" by Machine Girl
 
 HEAVEN_RUSH_TUTORIAL_KILL_TO_CLEAR=Kill All to Activate Exit
 HEAVEN_RUSH_TUTORIAL_TIME_LIMIT=Clear in Time Limit
