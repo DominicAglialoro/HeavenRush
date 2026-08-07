@@ -17,7 +17,6 @@
 		"Tutorials/*"
 	],
 	"exclude": [
-		"Maps/heavenRush/2_heavensEdge.bin",
 		"Maps/heavenRush/3_qqq.bin"
 	]
 }

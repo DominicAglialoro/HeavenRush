@@ -9,8 +9,8 @@ Mountain:
         Position: [ 0.0, 7.5, 14.6 ]
         Target: [ 0.0, 7, 12.7 ]
     Cursor: [ 0.0, -100 , 0.0 ]
-    MountainModelDirectory: Mountain/heavenRush/glassOcean
-    MountainTextureDirectory: heavenRush/glassOcean
+    MountainModelDirectory: Mountain/heavenRush/heavensEdge
+    MountainTextureDirectory: heavenRush/heavensEdge
     Rotate: false
     ShowSnow: false
 CompleteScreen:
@@ -21,7 +21,7 @@ CompleteScreen:
         ASide: 'HEAVEN_RUSH_MISSION_COMPLETE'
     Layers:
       - Type: "layer"
-        Images: [ "glassOcean" ]
+        Images: [ "heavensEdge" ]
         Position: [ 0.0, 0.0 ]
         Scroll: [ 0.0 ]
       - Type: 'ui'
