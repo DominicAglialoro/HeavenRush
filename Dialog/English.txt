@@ -20,6 +20,7 @@ HEAVEN_RUSH_SIGN_HANGING_GARDENS_INFO=In addition to the variants used in Glass 
 HEAVEN_RUSH_SIGN_HEAVENS_EDGE_CREDITS=
 This map uses art assets by Bissy, bryse0n, Juno, KoseiDiamond, and Zurcus.
 This map uses the following music track:{n}"Cloud Nine" by Machine Girl
+Thanks to Nene and krzysiek3_0 for playtesting the map.
 
 HEAVEN_RUSH_TUTORIAL_KILL_TO_CLEAR=Kill All to Activate Exit
 HEAVEN_RUSH_TUTORIAL_TIME_LIMIT=Clear in Time Limit
